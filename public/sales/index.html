@@ -395,6 +395,22 @@
       height: 100%;
       object-fit: cover;
     }
+    .viewfinder-flash {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+      z-index: 4;
+    }
+    .viewfinder-flash.flash-success {
+      background: rgba(34, 197, 94, 0.42); /* emerald green overlay */
+      opacity: 1;
+    }
+    .viewfinder-flash.flash-invalid {
+      background: rgba(239, 68, 68, 0.48); /* crimson red overlay */
+      opacity: 1;
+    }
     .viewfinder-box {
       position: absolute;
       width: 240px;
@@ -403,6 +419,16 @@
       border-radius: 20px;
       box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
       pointer-events: none;
+      z-index: 5;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .viewfinder-box.box-success {
+      border-color: #22c55e !important;
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.9), 0 0 0 9999px rgba(0, 0, 0, 0.55) !important;
+    }
+    .viewfinder-box.box-invalid {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.9), 0 0 0 9999px rgba(0, 0, 0, 0.55) !important;
     }
     .laser-line {
       position: absolute;
@@ -730,7 +756,8 @@
     <div class="viewfinder-container">
       <video id="scanner-video" playsinline autoplay muted></video>
       <canvas id="scanner-canvas" style="display: none;"></canvas>
-      <div class="viewfinder-box">
+      <div id="viewfinder-flash" class="viewfinder-flash"></div>
+      <div class="viewfinder-box" id="viewfinder-box">
         <div class="laser-line"></div>
       </div>
     </div>
@@ -881,6 +908,34 @@
       try { navigator.vibrate(50); } catch(e){}
     }
   }
+  var flashTimer = null;
+  function triggerScannerFlash(type) {
+    var flashEl = document.getElementById('viewfinder-flash');
+    var boxEl = document.getElementById('viewfinder-box');
+    if (!flashEl || !boxEl) return;
+
+    if (flashTimer) clearTimeout(flashTimer);
+
+    flashEl.classList.remove('flash-success', 'flash-invalid');
+    boxEl.classList.remove('box-success', 'box-invalid');
+
+    // Force DOM reflow to re-trigger transition
+    void flashEl.offsetWidth;
+
+    if (type === 'success') {
+      flashEl.classList.add('flash-success');
+      boxEl.classList.add('box-success');
+    } else {
+      flashEl.classList.add('flash-invalid');
+      boxEl.classList.add('box-invalid');
+    }
+
+    flashTimer = setTimeout(function() {
+      flashEl.classList.remove('flash-success', 'flash-invalid');
+      boxEl.classList.remove('box-success', 'box-invalid');
+    }, 450);
+  }
+
 
   function initApp() {
     var stored = localStorage.getItem('grqrr_sales_user');
@@ -1155,10 +1210,11 @@
     pickBtn.style.background = '#4b5563';
 
     var now = Date.now();
-    if (now - lastInvalidAlertTime > 1600) {
+    if (now - lastInvalidAlertTime > 1200) {
       lastInvalidAlertTime = now;
       playErrorTone();
       triggerHaptic();
+      triggerScannerFlash('invalid');
     }
   }
 
@@ -1215,11 +1271,12 @@
       pickBtn.textContent = 'SUDAH TERPAKAI';
 
       var now = Date.now();
-      if (now - lastInvalidAlertTime > 1600) {
+      if (now - lastInvalidAlertTime > 1200) {
         lastInvalidAlertTime = now;
         playErrorTone();
+        triggerHaptic();
+        triggerScannerFlash('invalid');
       }
-      return;
     }
 
     // 3. Fresh unassigned item -> ready to add
@@ -1245,6 +1302,7 @@
       scannedItems.add(currentDetectedId);
       playBeep();
       triggerHaptic();
+      triggerScannerFlash('success');
       updateScannerTray();
       handleQrDetected(currentDetectedId);
     }
