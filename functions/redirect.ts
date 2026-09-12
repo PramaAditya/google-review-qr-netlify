@@ -583,5 +583,5 @@ export default async (req: Request, context: Context) => {
 
 export const config: Config = {
   path: ["/:id", "/id/:id"],
-  excludedPath: ["/images/*", "/favicon.ico", "/"],
+  excludedPath: ["/images/*", "/icons/*", "/favicon.ico", "/", "/sales*", "/api/*", "/manifest.json", "/sw.js"],
 };

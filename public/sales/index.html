@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GRQRR Sales Portal</title>
+  
+  <!-- PWA Manifest & Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#18181b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="QR Sales">
+  <link rel="apple-touch-icon" href="/icons/icon.svg">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #f7f6f2;
+      color: #18181b;
+      min-height: 100vh;
+      padding: 1.25rem 1rem 3rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 460px;
+      width: 100%;
+    }
+    .card {
+      background: #ffffff;
+      border: 2px solid #18181b;
+      border-radius: 20px;
+      box-shadow: 4px 4px 0px #18181b;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .brand-title {
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .brand-badge {
+      background: #38bdf8;
+      color: #18181b;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      border: 1.5px solid #18181b;
+      box-shadow: 1.5px 1.5px 0px #18181b;
+    }
+    .btn-logout {
+      background: #f4f4f5;
+      border: 1.5px solid #18181b;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+    }
+    .btn-logout:active {
+      transform: translate(1px, 1px);
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.4rem;
+      color: #3f3f46;
+    }
+    input, select {
+      width: 100%;
+      background: #ffffff;
+      border: 1.75px solid #18181b;
+      border-radius: 12px;
+      padding: 0.75rem 0.85rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: #18181b;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input:focus {
+      border-color: #0284c7;
+      box-shadow: 2px 2px 0px #18181b;
+    }
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .range-sep {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #71717a;
+      text-align: center;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      background: #22c55e;
+      color: #ffffff;
+      border: 2px solid #18181b;
+      border-radius: 14px;
+      padding: 0.9rem;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 3px 3px 0px #18181b;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+    }
+    .btn-primary:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #18181b;
+    }
+    .btn-primary:disabled {
+      background: #a1a1aa;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Summary & Calculator Box */
+    .calc-box {
+      background: #fef08a;
+      border: 2px solid #18181b;
+      border-radius: 14px;
+      padding: 1rem;
+      margin-top: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 2px 2px 0px #18181b;
+    }
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 0.4rem;
+      color: #3f3f46;
+    }
+    .calc-total {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: #18181b;
+      border-top: 1.5px solid #18181b;
+      padding-top: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .comm-note {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #166534;
+      margin-top: 0.4rem;
+      text-align: right;
+    }
+
+    /* Alert Boxes */
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      border: 1.5px solid #18181b;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .alert-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    /* Stat Badges */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat-card {
+      background: #f8fafc;
+      border: 1.5px solid #18181b;
+      border-radius: 14px;
+      padding: 0.85rem;
+      box-shadow: 2px 2px 0px #18181b;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .stat-val {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #0f172a;
+      margin-top: 0.2rem;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- 1. LOGIN SCREEN -->
+  <div id="login-screen" class="card">
+    <div class="brand-header">
+      <div class="brand-title">
+        <span>GRQRR</span>
+        <span class="brand-badge">SALES PWA</span>
+      </div>
+    </div>
+    <p style="font-size: 0.9rem; color: #52525b; margin-bottom: 1.5rem;">
+      Portal aktivasi cepat stiker Google Review untuk sales representatif lapangan.
+    </p>
+
+    <div id="login-alert" class="alert alert-error hidden"></div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label for="login-phone">Nomor WhatsApp (Username)</label>
+        <input type="tel" id="login-phone" placeholder="Contoh: 081234567890" required inputmode="tel">
+      </div>
+
+      <div class="form-group">
+        <label for="login-pin">PIN Masuk (4 Digit)</label>
+        <input type="password" id="login-pin" placeholder="••••" maxlength="4" required inputmode="numeric">
+      </div>
+
+      <button type="submit" id="btn-login-submit" class="btn-primary" style="background: #18181b;">
+        Masuk ke Dashboard
+      </button>
+    </form>
+  </div>
+
+  <!-- 2. DASHBOARD & ACTIVATION SCREEN -->
+  <div id="app-screen" class="hidden">
+    
+    <!-- Rep Info Card -->
+    <div class="card">
+      <div class="brand-header">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; color: #71717a; text-transform: uppercase;">Sales Representative</div>
+          <div id="rep-name" style="font-size: 1.15rem; font-weight: 900; color: #18181b;">-</div>
+        </div>
+        <button type="button" class="btn-logout" onclick="logout()">Keluar</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Komisi</div>
+          <div id="stat-commission" class="stat-val" style="color: #16a34a;">Rp 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Titik Terpasang</div>
+          <div id="stat-points" class="stat-val">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activation Form Card -->
+    <div class="card">
+      <h2 style="font-size: 1.1rem; font-weight: 900; margin-bottom: 1rem;">Aktivasi Kafe Baru</h2>
+
+      <div id="act-alert" class="alert hidden"></div>
+
+      <form id="activation-form">
+        <div class="form-group">
+          <label for="act-merchant">Nama Kafe / Restoran *</label>
+          <input type="text" id="act-merchant" placeholder="Misal: Kopi Kenangan Dago" required>
+        </div>
+
+        <div class="form-group">
+          <label for="act-maps">Link Google Maps / Review *</label>
+          <input type="url" id="act-maps" placeholder="https://maps.app.goo.gl/... atau Place ID" required>
+        </div>
+
+        <div class="form-group">
+          <label for="act-owner-wa">WhatsApp Manajer / Toko (Opsional)</label>
+          <input type="tel" id="act-owner-wa" placeholder="08xxxxxxxxxx (Untuk laporan & alert)">
+        </div>
+
+        <!-- Range Stiker Meja Vinyl (S-[N]) -->
+        <div class="form-group" style="border-top: 1.5px dashed #e4e4e7; padding-top: 1rem; margin-top: 1rem;">
+          <label>Stiker Meja Vinyl (S-[N])</label>
+          <div class="range-row">
+            <input type="number" id="s-from" placeholder="Dari (No)" min="1" oninput="calcTotals()">
+            <span class="range-sep">s/d</span>
+            <input type="number" id="s-to" placeholder="Sampai (No)" min="1" oninput="calcTotals()">
+          </div>
+          <div id="s-hint" style="font-size: 0.75rem; color: #71717a; margin-top: 0.35rem;">
+            Akan mengaktifkan S-[dari] sampai S-[sampai]
+          </div>
+        </div>
+
+        <!-- Range Akrilik Kasir (A-[N]) -->
+        <div class="form-group">
+          <label>Akrilik Kasir (A-[N])</label>
+          <div class="range-row">
+            <input type="number" id="a-from" placeholder="Dari (No)" min="1" oninput="calcTotals()">
+            <span class="range-sep">s/d</span>
+            <input type="number" id="a-to" placeholder="Sampai (No)" min="1" oninput="calcTotals()">
+          </div>
+          <div id="a-hint" style="font-size: 0.75rem; color: #71717a; margin-top: 0.35rem;">
+            Akan mengaktifkan A-[dari] sampai A-[sampai]
+          </div>
+        </div>
+
+        <!-- Real-time Bill & Commission Calculator -->
+        <div class="calc-box">
+          <div class="calc-row">
+            <span id="calc-s-label">Stiker Meja (0 pcs x Rp 10.000):</span>
+            <span id="calc-s-val">Rp 0</span>
+          </div>
+          <div class="calc-row">
+            <span id="calc-a-label">Akrilik Kasir (0 pcs x Rp 25.000):</span>
+            <span id="calc-a-val">Rp 0</span>
+          </div>
+          <div class="calc-total">
+            <span>Total Tagihan ke Kafe:</span>
+            <span id="calc-bill-total">Rp 0</span>
+          </div>
+          <div class="comm-note" id="calc-comm-earned">
+            Estimasi Komisi Sales: Rp 0
+          </div>
+        </div>
+
+        <button type="submit" id="btn-activate-submit" class="btn-primary">
+          Aktifkan Sekarang
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  var currentUser = null;
+  var currentPricing = { price_vinyl_table: 10000, price_acrylic_cashier: 25000 };
+
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js').catch(function(err) {
+        console.log('SW registration failed:', err);
+      });
+    });
+  }
+
+  function formatRp(num) {
+    return 'Rp ' + (num || 0).toLocaleString('id-ID');
+  }
+
+  function initApp() {
+    var stored = localStorage.getItem('grqrr_sales_user');
+    if (stored) {
+      try {
+        currentUser = JSON.parse(stored);
+        showDashboard();
+      } catch (e) {
+        logout();
+      }
+    }
+  }
+
+  function showDashboard() {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app-screen').classList.remove('hidden');
+    
+    document.getElementById('rep-name').textContent = currentUser.name + ' (' + currentUser.phone + ')';
+    if (currentUser.summary) {
+      document.getElementById('stat-commission').textContent = formatRp(currentUser.summary.total_commission_idr);
+      var totalPts = (currentUser.summary.table_stickers || 0) + (currentUser.summary.cashier_acrylics || 0);
+      document.getElementById('stat-points').textContent = totalPts + ' Titik';
+    }
+    if (currentUser.pricing) {
+      currentPricing = currentUser.pricing;
+    }
+    calcTotals();
+  }
+
+  function logout() {
+    localStorage.removeItem('grqrr_sales_user');
+    currentUser = null;
+    document.getElementById('app-screen').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+  }
+
+  // Handle Login
+  document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var alertEl = document.getElementById('login-alert');
+    var btn = document.getElementById('btn-login-submit');
+    alertEl.classList.add('hidden');
+
+    var phone = document.getElementById('login-phone').value;
+    var pin = document.getElementById('login-pin').value;
+
+    btn.disabled = true;
+    btn.textContent = 'Memverifikasi...';
+
+    try {
+      var res = await fetch('/api/sales/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone, pin: pin })
+      });
+      var data = await res.json();
+
+      if (!res.ok || data.error) {
+        alertEl.textContent = data.error || 'Login gagal';
+        alertEl.classList.remove('hidden');
+      } else {
+        currentUser = {
+          id: data.salesRep.id,
+          name: data.salesRep.name,
+          phone: data.salesRep.phone,
+          pin: pin,
+          commission_table: data.salesRep.commission_table,
+          commission_cashier: data.salesRep.commission_cashier,
+          summary: data.summary,
+          pricing: data.pricing
+        };
+        localStorage.setItem('grqrr_sales_user', JSON.stringify(currentUser));
+        showDashboard();
+      }
+    } catch (err) {
+      alertEl.textContent = 'Terjadi gangguan koneksi internet.';
+      alertEl.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Masuk ke Dashboard';
+    }
+  });
+
+  // Calculate Real-time Totals
+  function calcTotals() {
+    var sFrom = parseInt(document.getElementById('s-from').value, 10);
+    var sTo = parseInt(document.getElementById('s-to').value, 10);
+    var aFrom = parseInt(document.getElementById('a-from').value, 10);
+    var aTo = parseInt(document.getElementById('a-to').value, 10);
+
+    var sQty = (!isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo) ? (sTo - sFrom + 1) : 0;
+    var aQty = (!isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo) ? (aTo - aFrom + 1) : 0;
+
+    var sPrice = currentPricing.price_vinyl_table || 10000;
+    var aPrice = currentPricing.price_acrylic_cashier || 25000;
+    var sComm = currentUser ? (currentUser.commission_table || 3000) : 3000;
+    var aComm = currentUser ? (currentUser.commission_cashier || 7000) : 7000;
+
+    var sSubtotal = sQty * sPrice;
+    var aSubtotal = aQty * aPrice;
+    var grandTotal = sSubtotal + aSubtotal;
+    var totalComm = (sQty * sComm) + (aQty * aComm);
+
+    document.getElementById('calc-s-label').textContent = 'Stiker Meja (' + sQty + ' pcs x ' + formatRp(sPrice) + '):';
+    document.getElementById('calc-s-val').textContent = formatRp(sSubtotal);
+
+    document.getElementById('calc-a-label').textContent = 'Akrilik Kasir (' + aQty + ' pcs x ' + formatRp(aPrice) + '):';
+    document.getElementById('calc-a-val').textContent = formatRp(aSubtotal);
+
+    document.getElementById('calc-bill-total').textContent = formatRp(grandTotal);
+    document.getElementById('calc-comm-earned').textContent = 'Estimasi Komisi Sales: ' + formatRp(totalComm);
+
+    if (sQty > 0) {
+      document.getElementById('s-hint').textContent = 'Mengaktifkan: S-' + sFrom + ' s/d S-' + sTo + ' (' + sQty + ' meja)';
+      document.getElementById('s-hint').style.color = '#16a34a';
+    } else {
+      document.getElementById('s-hint').textContent = 'Akan mengaktifkan S-[dari] sampai S-[sampai]';
+      document.getElementById('s-hint').style.color = '#71717a';
+    }
+
+    if (aQty > 0) {
+      document.getElementById('a-hint').textContent = 'Mengaktifkan: A-' + aFrom + ' s/d A-' + aTo + ' (' + aQty + ' kasir)';
+      document.getElementById('a-hint').style.color = '#16a34a';
+    } else {
+      document.getElementById('a-hint').textContent = 'Akan mengaktifkan A-[dari] sampai A-[sampai]';
+      document.getElementById('a-hint').style.color = '#71717a';
+    }
+  }
+
+  // Handle Activation Submit
+  document.getElementById('activation-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var alertEl = document.getElementById('act-alert');
+    var btn = document.getElementById('btn-activate-submit');
+    alertEl.className = 'alert hidden';
+
+    var merchantName = document.getElementById('act-merchant').value;
+    var mapsUrl = document.getElementById('act-maps').value;
+    var ownerWa = document.getElementById('act-owner-wa').value;
+
+    var sFrom = parseInt(document.getElementById('s-from').value, 10);
+    var sTo = parseInt(document.getElementById('s-to').value, 10);
+    var aFrom = parseInt(document.getElementById('a-from').value, 10);
+    var aTo = parseInt(document.getElementById('a-to').value, 10);
+
+    var hasTable = !isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo;
+    var hasCashier = !isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo;
+
+    if (!hasTable && !hasCashier) {
+      alertEl.textContent = 'Harap isi minimal rentang stiker meja atau akrilik kasir.';
+      alertEl.className = 'alert alert-error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Mengaktifkan Stiker di Turso...';
+
+    try {
+      var payload = {
+        phone: currentUser.phone,
+        pin: currentUser.pin,
+        merchant_name: merchantName,
+        maps_url: mapsUrl,
+        owner_whatsapp: ownerWa || null,
+        table_start: hasTable ? sFrom : null,
+        table_end: hasTable ? sTo : null,
+        cashier_start: hasCashier ? aFrom : null,
+        cashier_end: hasCashier ? aTo : null
+      };
+
+      var res = await fetch('/api/sales/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      var data = await res.json();
+
+      if (!res.ok || data.error) {
+        alertEl.textContent = data.error || 'Gagal aktivasi';
+        alertEl.className = 'alert alert-error';
+      } else {
+        alertEl.innerHTML = '<strong>' + data.message + '</strong><br>' +
+                            'Tagihan: ' + formatRp(data.summary.bill_total_idr) + ' | ' +
+                            'Komisi Anda: ' + formatRp(data.summary.commission_earned_idr) + '<br>' +
+                            '<span style="font-size:0.75rem; color:#166534;">ID: ' + data.summary.activated_ids.join(', ') + '</span>';
+        alertEl.className = 'alert alert-success';
+
+        // Update local stats
+        if (currentUser.summary) {
+          currentUser.summary.table_stickers = (currentUser.summary.table_stickers || 0) + (data.summary.table_stickers || 0);
+          currentUser.summary.cashier_acrylics = (currentUser.summary.cashier_acrylics || 0) + (data.summary.cashier_acrylics || 0);
+          currentUser.summary.total_commission_idr = (currentUser.summary.total_commission_idr || 0) + (data.summary.commission_earned_idr || 0);
+          localStorage.setItem('grqrr_sales_user', JSON.stringify(currentUser));
+          showDashboard();
+        }
+
+        // Reset form inputs
+        document.getElementById('act-merchant').value = '';
+        document.getElementById('act-maps').value = '';
+        document.getElementById('act-owner-wa').value = '';
+        document.getElementById('s-from').value = '';
+        document.getElementById('s-to').value = '';
+        document.getElementById('a-from').value = '';
+        document.getElementById('a-to').value = '';
+        calcTotals();
+      }
+    } catch (err) {
+      alertEl.textContent = 'Terjadi kesalahan jaringan.';
+      alertEl.className = 'alert alert-error';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Aktifkan Sekarang';
+    }
+  });
+
+  initApp();
+</script>
+
+</body>
+</html>
