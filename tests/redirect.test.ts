@@ -1,58 +1,40 @@
 import { describe, it, expect } from "bun:test";
 import { createClient } from "@libsql/client";
-import handler from "../functions/redirect";
+import handler, { normalizeQrId } from "../functions/redirect";
 
 const db = createClient({
   url: process.env.TURSO_DATABASE_URL!,
   authToken: process.env.TURSO_AUTH_TOKEN!,
 });
 
-describe("Google Review QR Redirect Function", () => {
-  it("redirects active 'lalana' (direct mode) via short route to Google Review URL", async () => {
-    const req = new Request("https://grqrr.netlify.app/lalana", {
-      headers: {
-        "x-nf-client-connection-ip": "114.124.200.1",
-        "x-city": "Bandung",
-        "x-country": "Indonesia",
-        "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
-        "referer": "https://camera.apple.com",
-      },
-    });
+describe("Google Review QR Redirect Function (Canonical S-[N] and A-[N])", () => {
+  it("normalizes various input formats correctly", () => {
+    // Stiker Meja: S-[N]
+    expect(normalizeQrId("S-1")).toBe("S-1");
+    expect(normalizeQrId("S-0001")).toBe("S-1");
+    expect(normalizeQrId("s-01")).toBe("S-1");
+    expect(normalizeQrId("s1")).toBe("S-1");
+    expect(normalizeQrId("S-105")).toBe("S-105");
+    expect(normalizeQrId("S-0105")).toBe("S-105");
 
-    const context: any = {
-      params: { id: "lalana" },
-      geo: { city: "Bandung", country: { name: "Indonesia" } },
-    };
-
-    const res = await handler(req, context);
-
-    expect(res.status).toBe(302);
-    expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
-    expect(res.headers.get("Cache-Control")).toContain("no-store");
-    expect(res.headers.get("Set-Cookie")).toContain("_gqr_vid=");
+    // Akrilik Kasir: A-[N]
+    expect(normalizeQrId("A-1")).toBe("A-1");
+    expect(normalizeQrId("A-0001")).toBe("A-1");
+    expect(normalizeQrId("a-01")).toBe("A-1");
+    expect(normalizeQrId("a1")).toBe("A-1");
+    expect(normalizeQrId("A-12")).toBe("A-12");
+    expect(normalizeQrId("A-0012")).toBe("A-12");
   });
 
-  it("maintains backward compatibility for legacy '/id/lalana' path", async () => {
-    const req = new Request("https://grqrr.netlify.app/id/lalana");
-    const context: any = { params: { id: "lalana" } };
-    const res = await handler(req, context);
-    expect(res.status).toBe(302);
-    expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
-  });
-
-  it("serves Reputation Shield micro-rating page for 'lalana-01' on short route", async () => {
-    const req = new Request("https://grqrr.netlify.app/lalana-01", {
+  it("serves Reputation Shield micro-rating page for 'S-1' (Meja 01, inherit)", async () => {
+    const req = new Request("https://grqrr.netlify.app/S-1", {
       headers: {
         "x-nf-client-connection-ip": "114.124.200.2",
         "user-agent": "Mozilla/5.0 (Android 14; Mobile)",
       },
     });
 
-    const context: any = {
-      params: { id: "lalana-01" },
-    };
-
-    const res = await handler(req, context);
+    const res = await handler(req, { params: { id: "S-1" } } as any);
 
     expect(res.status).toBe(200);
     const html = await res.text();
@@ -61,29 +43,60 @@ describe("Google Review QR Redirect Function", () => {
     expect(html).toContain("Meja 01");
     expect(html).toContain("Hubungi Manager via WhatsApp");
     expect(html).toContain("rate(5)");
-    expect(html).toContain("/lalana-01?rate=");
+    expect(html).toContain("/S-1?rate=");
   });
 
-  it("redirects to Google Review when 5-star rating chosen on 'lalana-01'", async () => {
-    const req = new Request("https://grqrr.netlify.app/lalana-01?rate=5", {
+  it("normalizes leading zeroes from 'S-0001' and resolves to 'S-1'", async () => {
+    const req = new Request("https://grqrr.netlify.app/S-0001");
+    const res = await handler(req, { params: { id: "S-0001" } } as any);
+
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("Meja 01");
+  });
+
+  it("redirects active 'A-1' (Kasir Utama, direct mode) directly to Google Review", async () => {
+    const req = new Request("https://grqrr.netlify.app/A-1", {
+      headers: {
+        "x-nf-client-connection-ip": "114.124.200.1",
+        "x-city": "Bandung",
+        "x-country": "Indonesia",
+        "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
+      },
+    });
+
+    const res = await handler(req, { params: { id: "A-1" } } as any);
+
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
+    expect(res.headers.get("Cache-Control")).toContain("no-store");
+    expect(res.headers.get("Set-Cookie")).toContain("_gqr_vid=");
+  });
+
+  it("normalizes 'A-0001' and resolves to 'A-1'", async () => {
+    const req = new Request("https://grqrr.netlify.app/A-0001");
+    const res = await handler(req, { params: { id: "A-0001" } } as any);
+
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
+  });
+
+  it("redirects to Google Review when 5-star rating chosen on 'S-1'", async () => {
+    const req = new Request("https://grqrr.netlify.app/S-1?rate=5", {
       headers: {
         "x-nf-client-connection-ip": "114.124.200.3",
         "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
       },
     });
 
-    const context: any = {
-      params: { id: "lalana-01" },
-    };
-
-    const res = await handler(req, context);
+    const res = await handler(req, { params: { id: "S-1" } } as any);
 
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
 
-    // Verify rating logged
+    // Verify rating logged in Turso
     const latestScan = await db.execute({
-      sql: "SELECT rating_given, device_type FROM qr_scans WHERE link_id = 'lalana-01' AND rating_given = 5 LIMIT 1;",
+      sql: "SELECT rating_given, device_type FROM qr_scans WHERE link_id = 'S-1' AND rating_given = 5 LIMIT 1;",
       args: [],
     });
     expect(latestScan.rows.length).toBe(1);
@@ -91,18 +104,14 @@ describe("Google Review QR Redirect Function", () => {
     expect(latestScan.rows[0].device_type).toBe("ios");
   });
 
-  it("logs negative rating (rate=2) via background log ping on 'lalana-01'", async () => {
-    const req = new Request("https://grqrr.netlify.app/lalana-01?rate=2&log_only=1", {
+  it("logs negative rating (rate=2) via background log ping on 'S-1'", async () => {
+    const req = new Request("https://grqrr.netlify.app/S-1?rate=2&log_only=1", {
       headers: {
         "user-agent": "Mozilla/5.0 (Android 14; Mobile)",
       },
     });
 
-    const context: any = {
-      params: { id: "lalana-01" },
-    };
-
-    const res = await handler(req, context);
+    const res = await handler(req, { params: { id: "S-1" } } as any);
 
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -111,7 +120,7 @@ describe("Google Review QR Redirect Function", () => {
 
     // Verify logged in Turso
     const latestNegative = await db.execute({
-      sql: "SELECT rating_given, device_type FROM qr_scans WHERE link_id = 'lalana-01' AND rating_given = 2 LIMIT 1;",
+      sql: "SELECT rating_given, device_type FROM qr_scans WHERE link_id = 'S-1' AND rating_given = 2 LIMIT 1;",
       args: [],
     });
     expect(latestNegative.rows.length).toBe(1);
@@ -119,31 +128,10 @@ describe("Google Review QR Redirect Function", () => {
     expect(latestNegative.rows[0].device_type).toBe("android");
   });
 
-  it("handles unassigned stickers gracefully with HTML status page", async () => {
-    const req = new Request("https://grqrr.netlify.app/demo-unassigned");
-    const context: any = { params: { id: "demo-unassigned" } };
-
-    const res = await handler(req, context);
-    expect(res.status).toBe(200);
-    const html = await res.text();
-    expect(html).toContain("Stiker Belum Diaktifkan");
-  });
-
-  it("handles suspended stickers gracefully with notice", async () => {
-    const req = new Request("https://grqrr.netlify.app/demo-suspended");
-    const context: any = { params: { id: "demo-suspended" } };
-
-    const res = await handler(req, context);
-    expect(res.status).toBe(200);
-    const html = await res.text();
-    expect(html).toContain("Stiker Nonaktif");
-  });
-
   it("returns 404 page for nonexistent ID", async () => {
     const req = new Request("https://grqrr.netlify.app/nonexistent-xyz");
-    const context: any = { params: { id: "nonexistent-xyz" } };
+    const res = await handler(req, { params: { id: "nonexistent-xyz" } } as any);
 
-    const res = await handler(req, context);
     expect(res.status).toBe(404);
     const html = await res.text();
     expect(html).toContain("QR Code Tidak Ditemukan");

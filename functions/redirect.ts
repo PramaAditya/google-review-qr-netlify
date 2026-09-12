@@ -19,6 +19,22 @@ function parseVisitorCookie(cookieHeader: string | null): string | null {
   const match = cookieHeader.match(/(?:^|;\s*)_gqr_vid=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : null;
 }
+/**
+ * Canonical QR ID Normalizer
+ * - S-[N]: Stiker Meja Vinyl (e.g. S-0001 -> S-1)
+ * - A-[N]: Akrilik Kasir (e.g. A-0012 -> A-12)
+ * Leading zeroes are strictly stripped.
+ */
+export function normalizeQrId(rawId: string): string {
+  const match = rawId.trim().match(/^([SA])-?0*(\d+)$/i);
+  if (match) {
+    const prefix = match[1].toUpperCase();
+    const num = parseInt(match[2], 10);
+    return `${prefix}-${num}`;
+  }
+  return rawId.trim();
+}
+
 
 function renderHtmlPage(
   title: string,
@@ -397,9 +413,9 @@ function renderShieldPage(
 }
 
 export default async (req: Request, context: Context) => {
-  const id = context.params?.id;
+  const rawId = context.params?.id || new URL(req.url).pathname.split("/").filter(Boolean).pop();
 
-  if (!id) {
+  if (!rawId) {
     return renderHtmlPage(
       "Parameter ID Kosong",
       "Format link QR tidak valid. Pastikan URL memiliki parameter ID.",
@@ -408,6 +424,8 @@ export default async (req: Request, context: Context) => {
       400
     );
   }
+
+  const id = normalizeQrId(rawId);
 
   // Parse query parameters
   const url = new URL(req.url);
