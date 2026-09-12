@@ -29,6 +29,28 @@ async function seed() {
 
   const lalanaReviewUrl = "https://search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg";
 
+  // 0. Seed Global App Settings (Pricing & Commissions)
+  console.log("\n--- Seeding App Settings & Pricing ---");
+  const settings = [
+    { key: "price_vinyl_table", value: "10000", description: "Harga jual resmi stiker meja vinyl (Rp)" },
+    { key: "price_acrylic_cashier", value: "25000", description: "Harga jual resmi akrilik kasir (Rp)" },
+    { key: "default_commission_table", value: "3000", description: "Standar komisi sales per stiker meja (Rp)" },
+    { key: "default_commission_cashier", value: "7000", description: "Standar komisi sales per akrilik kasir (Rp)" },
+  ];
+
+  for (const s of settings) {
+    await db.execute({
+      sql: `INSERT INTO app_settings (key, value, description, updated_at)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(key) DO UPDATE SET
+              value = excluded.value,
+              description = excluded.description,
+              updated_at = CURRENT_TIMESTAMP;`,
+      args: [s.key, s.value, s.description],
+    });
+    console.log(`Setting '${s.key}' = ${s.value} (${s.description})`);
+  }
+
   // 1. Seed Sales Reps (with 4-digit PIN & standardized 08xxx username)
   console.log("\n--- Seeding Sales Representatives ---");
   const salesTeam = [

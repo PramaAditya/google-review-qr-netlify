@@ -11,6 +11,14 @@ if (!url || !authToken) {
 const db = createClient({ url, authToken });
 
 async function checkStatus() {
+  console.log("=== APP SETTINGS & PRICING ===");
+  const settings = await db.execute(`
+    SELECT key as setting_key, value as setting_value, description 
+    FROM app_settings 
+    ORDER BY key ASC;
+  `);
+  console.table(settings.rows);
+
   console.log("=== SALES REPRESENTATIVES ROSTER ===");
   const sales = await db.execute(`
     SELECT id as username_phone, name, pin, 

@@ -83,6 +83,12 @@ async function migrate() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       last_login_at DATETIME
     );`,
+    `CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      description TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );`,
   ]);
 
   // 1.1 Add default_mode to merchants
