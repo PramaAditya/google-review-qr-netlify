@@ -210,4 +210,27 @@ describe("Sales PWA Backend APIs", () => {
     expect(data.error).toContain("tidak dapat ditimpa");
     expect(data.conflicts).toContain("S-1");
   });
+  it("resolves Google Maps URL to Place ID and direct review URL", async () => {
+    const fullUrl = "https://www.google.com/maps/place/Lalana+Space/@-6.9905221,107.6614287,17z/data=!3m1!4b1!4m6!3m5!1s0x2e68e9d2a1bef62d:0x28e421c251500c38!8m2!3d-6.9905221!4d107.6640036!16s%2Fg%2F11y1zl89vx?entry=ttu";
+    const req = new Request(`https://grqrr.netlify.app/api/sales/resolve-maps?url=${encodeURIComponent(fullUrl)}`);
+    const res = await salesHandler(req, {} as any);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.success).toBe(true);
+    expect(data.data.placeId).toBe("ChIJLfa-odLpaC4ROAxQUcIh5Cg");
+    expect(data.data.name).toBe("Lalana Space");
+    expect(data.data.directReviewUrl).toContain("placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
+  });
+
+  it("returns 422 for invalid Google Maps URL without location ID", async () => {
+    const req = new Request("https://grqrr.netlify.app/api/sales/resolve-maps", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: "https://google.com/search?q=not-a-map" }),
+    });
+    const res = await salesHandler(req, {} as any);
+    expect(res.status).toBe(422);
+    const data = await res.json();
+    expect(data.error).toContain("tidak memuat ID lokasi");
+  });
 });

@@ -1,5 +1,7 @@
 import { createClient } from "@libsql/client";
 import type { Config, Context } from "@netlify/functions";
+import { parseGoogleMapsUrl } from "./place-id";
+
 
 const db = createClient({
   url: process.env.TURSO_DATABASE_URL!,
@@ -86,6 +88,33 @@ export default async (req: Request, context: Context) => {
       merchant_name: row.merchant_name || null,
     });
   }
+  // 0.1 POST/GET /api/sales/resolve-maps (Resolve Google Maps URL to Place ID and Direct Review URL)
+  if (path.endsWith("/resolve-maps") && (req.method === "POST" || req.method === "GET")) {
+    try {
+      let inputUrl = "";
+      if (req.method === "POST") {
+        const body = await req.json();
+        inputUrl = String(body.url || "").trim();
+      } else {
+        inputUrl = String(url.searchParams.get("url") || "").trim();
+      }
+
+      if (!inputUrl) {
+        return jsonResponse({ error: "URL Google Maps wajib disertakan." }, 400);
+      }
+
+      const placeInfo = await parseGoogleMapsUrl(inputUrl);
+      return jsonResponse({
+        success: true,
+        data: placeInfo,
+      });
+    } catch (err: any) {
+      return jsonResponse({
+        error: err.message || "Gagal memproses link Google Maps.",
+      }, 422);
+    }
+  }
+
 
 
   // 1. POST /api/sales/login
@@ -274,6 +303,19 @@ export default async (req: Request, context: Context) => {
       const waTarget = complaintWa ? formatWhatsAppUrlNumber(complaintWa) : "6281234567890";
       const negativeFeedbackUrl = `https://wa.me/${waTarget}?text=Halo+Manager+${encodeURIComponent(merchantName)}+Saya+ada+masukan`;
 
+      // Auto-resolve Google Maps link to canonical direct review URL (Place ID)
+      let finalMapsUrl = mapsUrl;
+      try {
+        if (mapsUrl && !mapsUrl.includes("writereview?placeid=")) {
+          const resolved = await parseGoogleMapsUrl(mapsUrl);
+          if (resolved && resolved.directReviewUrl) {
+            finalMapsUrl = resolved.directReviewUrl;
+          }
+        }
+      } catch (e) {
+        // Fallback to original mapsUrl if resolving fails
+      }
+
       // 1. Insert Merchant
       await db.execute({
         sql: `INSERT INTO merchants (id, name, owner_whatsapp, manager_whatsapp, complaint_whatsapp, business_whatsapp, plan, default_mode, sales_rep_id)
@@ -327,7 +369,7 @@ export default async (req: Request, context: Context) => {
                   negative_feedback_url = excluded.negative_feedback_url,
                   status = excluded.status,
                   assigned_at = CURRENT_TIMESTAMP;`,
-          args: [cleanId, merchantId, stdPhone, merchantName, tableNo, zone, stickerType, mode, mapsUrl, negativeFeedbackUrl],
+          args: [cleanId, merchantId, stdPhone, merchantName, tableNo, zone, stickerType, mode, finalMapsUrl, negativeFeedbackUrl],
         });
       }
 
@@ -364,7 +406,7 @@ export default async (req: Request, context: Context) => {
               stdPhone,
               merchantName,
               `Meja ${tableIndex.toString().padStart(2, "0")}`,
-              mapsUrl,
+              finalMapsUrl,
               negativeFeedbackUrl,
             ],
           });
@@ -402,7 +444,7 @@ export default async (req: Request, context: Context) => {
               merchantId,
               stdPhone,
               merchantName,
-              mapsUrl,
+              finalMapsUrl,
               negativeFeedbackUrl,
             ],
           });

@@ -155,6 +155,65 @@
       border-color: #0284c7;
       box-shadow: 2px 2px 0px #18181b;
     }
+    .input-with-action {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .input-with-action input {
+      flex: 1;
+      margin-bottom: 0 !important;
+    }
+    .btn-verify-icon {
+      width: 48px;
+      height: 48px;
+      background: #fef08a;
+      border: 2px solid #18181b;
+      border-radius: 12px;
+      box-shadow: 2px 2px 0px #18181b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+    }
+    .btn-verify-icon:active {
+      transform: translate(2px, 2px);
+      box-shadow: 0px 0px 0px #18181b;
+    }
+    .btn-verify-icon.verified {
+      background: #bbf7d0 !important;
+      border-color: #16a34a !important;
+    }
+    .btn-verify-icon.loading {
+      opacity: 0.8;
+      cursor: wait;
+    }
+    .btn-verify-icon svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+    @keyframes spinVerify {
+      100% { transform: rotate(360deg); }
+    }
+    .spin-verify {
+      animation: spinVerify 0.8s linear infinite;
+    }
+    .maps-verified-card {
+      margin-top: 0.5rem;
+      background: #f0fdf4;
+      border: 1.5px solid #86efac;
+      border-radius: 12px;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
     .range-row {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -655,8 +714,19 @@
         </div>
 
         <div class="form-group">
-          <label for="act-maps">Link Google Maps / Review *</label>
-          <input type="url" id="act-maps" placeholder="https://maps.app.goo.gl/... atau Place ID" required>
+          <label for="act-maps">Link Google Maps Toko *</label>
+          <div class="input-with-action">
+            <input type="url" id="act-maps" placeholder="https://maps.app.goo.gl/... atau link Maps toko" required oninput="onMapsInputChanged()">
+            <button type="button" id="btn-verify-maps" class="btn-verify-icon" onclick="verifyMapsUrl()" title="Verifikasi Link Google Maps & Ambil Place ID">
+              <span id="verify-icon-inner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </span>
+            </button>
+          </div>
+          <div id="maps-verify-badge" class="maps-verified-card hidden"></div>
         </div>
 
         <!-- 1. Mode Selection Toggle -->
@@ -982,6 +1052,96 @@
       group.style.display = 'block';
     }
   }
+  var resolvedDirectReviewUrl = null;
+
+  function onMapsInputChanged() {
+    resolvedDirectReviewUrl = null;
+    var badge = document.getElementById('maps-verify-badge');
+    var btn = document.getElementById('btn-verify-maps');
+    var iconInner = document.getElementById('verify-icon-inner');
+    if (badge) badge.classList.add('hidden');
+    if (btn) {
+      btn.classList.remove('verified', 'loading');
+      btn.style.background = '#fef08a';
+      btn.disabled = false;
+    }
+    if (iconInner) {
+      iconInner.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>';
+    }
+  }
+
+  async function verifyMapsUrl() {
+    var input = document.getElementById('act-maps');
+    var btn = document.getElementById('btn-verify-maps');
+    var iconInner = document.getElementById('verify-icon-inner');
+    var badge = document.getElementById('maps-verify-badge');
+    var alertEl = document.getElementById('act-alert');
+    var merchantNameInput = document.getElementById('act-merchant');
+
+    var rawUrl = (input.value || '').trim();
+    if (!rawUrl) {
+      alertEl.textContent = 'Masukkan link Google Maps toko terlebih dahulu.';
+      alertEl.className = 'alert alert-error';
+      alertEl.classList.remove('hidden');
+      input.focus();
+      return;
+    }
+
+    alertEl.classList.add('hidden');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    iconInner.innerHTML = '<svg class="spin-verify" viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2.5"><circle cx="12" cy="12" r="9" stroke-dasharray="32" stroke-dashoffset="12"/></svg>';
+
+    try {
+      var res = await fetch('/api/sales/resolve-maps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: rawUrl })
+      });
+
+      var resJson = await res.json();
+      if (!res.ok || !resJson.success) {
+        throw new Error(resJson.error || 'Link Google Maps tidak valid.');
+      }
+
+      var data = resJson.data;
+      resolvedDirectReviewUrl = data.directReviewUrl;
+
+      // Auto-fill Merchant Name if empty
+      if (data.name && (!merchantNameInput.value || merchantNameInput.value.trim() === '')) {
+        merchantNameInput.value = data.name;
+      }
+
+      // Success UI update
+      btn.classList.remove('loading');
+      btn.classList.add('verified');
+      btn.disabled = false;
+      iconInner.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+      playBeep();
+      triggerHaptic();
+
+      badge.innerHTML = '<div>' +
+        '<strong style="color: #15803d;">✓ Terverifikasi</strong>: ' + (data.name ? '<span>' + data.name + '</span> ' : '') +
+        (data.placeId ? '<code style="background:#dcfce7; color:#166534; padding:0.1rem 0.35rem; border-radius:4px; font-size:0.75rem;">' + data.placeId + '</code>' : '') +
+        '</div>' +
+        '<a href="' + data.directReviewUrl + '" target="_blank" rel="noopener" style="color: #15803d; font-weight: 800; text-decoration: underline; flex-shrink: 0;">Uji Buka ↗</a>';
+      badge.classList.remove('hidden');
+
+    } catch (err) {
+      btn.classList.remove('loading', 'verified');
+      btn.disabled = false;
+      btn.style.background = '#fef08a';
+      iconInner.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      
+      playErrorTone();
+      alertEl.textContent = err.message || 'Gagal memverifikasi link Google Maps.';
+      alertEl.className = 'alert alert-error';
+      alertEl.classList.remove('hidden');
+      if (badge) badge.classList.add('hidden');
+    }
+  }
+
 
   function syncBusinessWa() {
     if (document.getElementById('same-wa-checkbox').checked) {
@@ -1497,7 +1657,7 @@
     alertEl.className = 'alert hidden';
 
     var merchantName = document.getElementById('act-merchant').value;
-    var mapsUrl = document.getElementById('act-maps').value;
+    var mapsUrl = resolvedDirectReviewUrl || document.getElementById('act-maps').value.trim();
     var complaintWa = document.getElementById('act-complaint-wa').value;
     var businessWa = document.getElementById('act-business-wa').value || complaintWa;
 
@@ -1558,6 +1718,8 @@
         document.getElementById('act-business-wa').value = '';
         document.getElementById('same-wa-checkbox').checked = true;
         toggleSameWa();
+        resolvedDirectReviewUrl = null;
+        onMapsInputChanged();
         document.getElementById('s-from').value = '';
         document.getElementById('s-to').value = '';
         document.getElementById('a-from').value = '';
