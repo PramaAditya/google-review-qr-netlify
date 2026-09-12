@@ -14,6 +14,9 @@
   <link rel="apple-touch-icon" href="/icons/icon.svg">
   <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
 
+  <!-- Standalone Offline JS QR Decoder -->
+  <script src="/sales/jsqr.min.js"></script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
@@ -95,6 +98,30 @@
       transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
     .btn-demo-pitch:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #18181b;
+    }
+
+    /* Bulk Camera Scanner Button */
+    .btn-camera-scan {
+      width: 100%;
+      background: #38bdf8;
+      border: 2px solid #18181b;
+      border-radius: 14px;
+      box-shadow: 3px 3px 0px #18181b;
+      color: #18181b;
+      font-weight: 800;
+      font-size: 0.9rem;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-camera-scan:active {
       transform: translate(2px, 2px);
       box-shadow: 1px 1px 0px #18181b;
     }
@@ -200,6 +227,41 @@
       transform: none;
     }
 
+    /* Scanned Items Pills Tray */
+    .chips-tray {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.5rem;
+      max-height: 120px;
+      overflow-y: auto;
+      padding: 0.5rem;
+      background: #f4f4f5;
+      border: 1.5px solid #18181b;
+      border-radius: 12px;
+    }
+    .chip {
+      background: #ffffff;
+      border: 1.5px solid #18181b;
+      border-radius: 9999px;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: 1px 1px 0px #18181b;
+    }
+    .chip.acrylic {
+      background: #fef08a;
+    }
+    .chip-del {
+      color: #ef4444;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
     /* Summary & Calculator Box */
     .calc-box {
       background: #fef08a;
@@ -278,6 +340,143 @@
       font-weight: 900;
       color: #0f172a;
       margin-top: 0.2rem;
+    }
+
+    /* =======================================
+       FULLSCREEN LIVE CAMERA SCANNER VIEW
+       ======================================= */
+    #scanner-screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #09090b;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      color: white;
+    }
+    .scanner-header {
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(9, 9, 11, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    .btn-back-scanner {
+      background: #27272a;
+      color: white;
+      border: 1.5px solid #3f3f46;
+      padding: 0.4rem 0.85rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .scanner-count-badge {
+      background: #22c55e;
+      color: #09090b;
+      font-weight: 800;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+    }
+
+    .viewfinder-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #scanner-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .viewfinder-box {
+      position: absolute;
+      width: 240px;
+      height: 240px;
+      border: 3px solid #38bdf8;
+      border-radius: 20px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+      pointer-events: none;
+    }
+    .laser-line {
+      position: absolute;
+      top: 0; left: 5%; width: 90%; height: 2px;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+      animation: scanLaser 2s infinite linear;
+    }
+    @keyframes scanLaser {
+      0% { top: 5%; opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { top: 92%; opacity: 0; }
+    }
+
+    .scanner-bottom {
+      background: #18181b;
+      padding: 1.25rem 1rem;
+      border-top: 2px solid #27272a;
+      z-index: 10;
+    }
+    .detected-card {
+      background: #27272a;
+      border: 1.5px solid #3f3f46;
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      animation: fadeIn 0.15s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .detected-info {
+      text-align: left;
+    }
+    .detected-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .detected-sub {
+      font-size: 0.75rem;
+      color: #a1a1aa;
+    }
+    .btn-pick {
+      background: #22c55e;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .btn-pick:active {
+      transform: scale(0.95);
+    }
+    .btn-finish-scan {
+      width: 100%;
+      background: #38bdf8;
+      color: #09090b;
+      border: none;
+      border-radius: 14px;
+      padding: 0.9rem;
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .btn-finish-scan:active {
+      transform: scale(0.98);
     }
 
     /* Modal Pitching Demo */
@@ -414,6 +613,11 @@
       <button type="button" class="btn-demo-pitch" onclick="openDemoModal()">
         <span>Buka Simulasi Demo Shield (Tunjukkan ke Klien)</span>
       </button>
+
+      <!-- Bulk Camera Scanner Trigger -->
+      <button type="button" class="btn-camera-scan" onclick="startBulkScanner()">
+        <span>Pindai Kamera Stiker Lepas (Quick Bulk Scan)</span>
+      </button>
     </div>
 
     <!-- Activation Form Card -->
@@ -473,29 +677,41 @@
           <input type="tel" id="act-business-wa" placeholder="08xxxxxxxxxx (Untuk laporan mingguan & tagihan)">
         </div>
 
-        <!-- Range Stiker (S-[N]) -->
-        <div class="form-group" style="border-top: 1.5px dashed #e4e4e7; padding-top: 1rem; margin-top: 1rem;">
-          <label>Stiker (S-[N])</label>
-          <div class="range-row">
-            <input type="number" id="s-from" placeholder="Dari (No)" min="1" oninput="calcTotals()">
-            <span class="range-sep">s/d</span>
-            <input type="number" id="s-to" placeholder="Sampai (No)" min="1" oninput="calcTotals()">
+        <!-- Scanned Items Tray (populated by Camera Scanner) -->
+        <div id="scanned-items-section" class="form-group hidden" style="border-top: 1.5px dashed #e4e4e7; padding-top: 1rem; margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label style="margin-bottom: 0;">Item Hasil Pindai Kamera (<span id="tray-count">0</span>)</label>
+            <button type="button" style="background: none; border: none; font-size: 0.75rem; color: #ef4444; font-weight: 700; cursor: pointer;" onclick="clearScannedItems()">Hapus Semua</button>
           </div>
-          <div id="s-hint" style="font-size: 0.75rem; color: #71717a; margin-top: 0.35rem;">
-            Akan mengaktifkan S-[dari] sampai S-[sampai]
-          </div>
+          <div class="chips-tray" id="chips-tray"></div>
         </div>
 
-        <!-- Range Akrilik (A-[N]) -->
-        <div class="form-group">
-          <label>Akrilik (A-[N])</label>
-          <div class="range-row">
-            <input type="number" id="a-from" placeholder="Dari (No)" min="1" oninput="calcTotals()">
-            <span class="range-sep">s/d</span>
-            <input type="number" id="a-to" placeholder="Sampai (No)" min="1" oninput="calcTotals()">
+        <!-- Range Inputs (Alternative Manual Input) -->
+        <div id="manual-range-section">
+          <!-- Range Stiker (S-[N]) -->
+          <div class="form-group" style="border-top: 1.5px dashed #e4e4e7; padding-top: 1rem; margin-top: 1rem;">
+            <label>Rentang Stiker (S-[N])</label>
+            <div class="range-row">
+              <input type="number" id="s-from" placeholder="Dari (No)" min="1" oninput="calcTotals()">
+              <span class="range-sep">s/d</span>
+              <input type="number" id="s-to" placeholder="Sampai (No)" min="1" oninput="calcTotals()">
+            </div>
+            <div id="s-hint" style="font-size: 0.75rem; color: #71717a; margin-top: 0.35rem;">
+              Akan mengaktifkan S-[dari] sampai S-[sampai]
+            </div>
           </div>
-          <div id="a-hint" style="font-size: 0.75rem; color: #71717a; margin-top: 0.35rem;">
-            Akan mengaktifkan A-[dari] sampai A-[sampai]
+
+          <!-- Range Akrilik (A-[N]) -->
+          <div class="form-group">
+            <label>Rentang Akrilik (A-[N])</label>
+            <div class="range-row">
+              <input type="number" id="a-from" placeholder="Dari (No)" min="1" oninput="calcTotals()">
+              <span class="range-sep">s/d</span>
+              <input type="number" id="a-to" placeholder="Sampai (No)" min="1" oninput="calcTotals()">
+            </div>
+            <div id="a-hint" style="font-size: 0.75rem; color: #71717a; margin-top: 0.35rem;">
+              Akan mengaktifkan A-[dari] sampai A-[sampai]
+            </div>
           </div>
         </div>
 
@@ -526,7 +742,41 @@
 
   </div>
 
-  <!-- 3. PITCHING SIMULATION MODAL -->
+  <!-- 3. FULLSCREEN CAMERA SCANNER VIEW -->
+  <div id="scanner-screen" class="hidden">
+    <div class="scanner-header">
+      <button type="button" class="btn-back-scanner" onclick="stopBulkScanner()">← Batal</button>
+      <div style="font-size: 0.9rem; font-weight: 800;">Pindai Stiker / Akrilik</div>
+      <div class="scanner-count-badge" id="scanner-badge-count">0 Item</div>
+    </div>
+
+    <div class="viewfinder-container">
+      <video id="scanner-video" playsinline autoplay muted></video>
+      <canvas id="scanner-canvas" style="display: none;"></canvas>
+      <div class="viewfinder-box">
+        <div class="laser-line"></div>
+      </div>
+    </div>
+
+    <div class="scanner-bottom">
+      <div id="detected-banner" class="detected-card hidden">
+        <div class="detected-info">
+          <div class="detected-title" id="det-name">Stiker S-42</div>
+          <div class="detected-sub" id="det-sub">Siap ditambahkan</div>
+        </div>
+        <button type="button" class="btn-pick" id="btn-pick-action" onclick="addCurrentDetected()">+ PILIH</button>
+      </div>
+
+      <!-- Scanned Tray inside scanner -->
+      <div id="scanner-tray" style="display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.75rem; margin-bottom: 0.75rem;"></div>
+
+      <button type="button" class="btn-finish-scan" onclick="finishBulkScanner()">
+        Selesai Scan (<span id="btn-finish-count">0</span> Item) >
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. PITCHING SIMULATION MODAL -->
   <div id="demo-modal" class="modal-backdrop hidden">
     <div class="modal-content">
       <button type="button" class="modal-close" onclick="closeDemoModal()">×</button>
@@ -598,6 +848,14 @@
   var currentPricing = { price_vinyl_table: 10000, price_acrylic_cashier: 25000 };
   var currentSelectedMode = 'shield';
 
+  // Scanned items collection
+  var scannedItems = new Set();
+  var currentDetectedId = null;
+  var scannerStream = null;
+  var scannerAnimId = null;
+  var lastAddedId = null;
+  var lastAddedTime = 0;
+
   // Register PWA Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
@@ -609,6 +867,27 @@
 
   function formatRp(num) {
     return 'Rp ' + (num || 0).toLocaleString('id-ID');
+  }
+
+  // Audio & Haptic Feedback
+  function playBeep() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880; // A5 pitch
+      gain.gain.value = 0.1;
+      osc.start();
+      setTimeout(function() { osc.stop(); ctx.close(); }, 80);
+    } catch (e) {}
+  }
+
+  function triggerHaptic() {
+    if (navigator.vibrate) {
+      try { navigator.vibrate(50); } catch(e){}
+    }
   }
 
   function initApp() {
@@ -637,6 +916,13 @@
       currentPricing = currentUser.pricing;
     }
     calcTotals();
+  }
+
+  function logout() {
+    localStorage.removeItem('grqrr_sales_user');
+    currentUser = null;
+    document.getElementById('app-screen').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
   }
 
   function toggleSameWa() {
@@ -675,18 +961,6 @@
       hintEl.style.display = 'none';
       input.required = false;
     }
-  }
-  function logout() {
-    localStorage.removeItem('grqrr_sales_user');
-    currentUser = null;
-    document.getElementById('app-screen').classList.add('hidden');
-    document.getElementById('login-screen').classList.remove('hidden');
-  }
-
-  function selectMode(mode) {
-    currentSelectedMode = mode;
-    document.getElementById('mode-shield').classList.toggle('active', mode === 'shield');
-    document.getElementById('mode-direct').classList.toggle('active', mode === 'direct');
   }
 
   // Pitching Demo Functions
@@ -774,45 +1048,241 @@
     }
   });
 
-  // Calculate Real-time Totals
+  // ==========================================
+  // BULK CAMERA SCANNER ENGINE
+  // ==========================================
+  function parseScannedQrText(text) {
+    if (!text) return null;
+    var trimmed = text.trim();
+    // Match URL or direct code: .../S-42, .../A-12, or just S-42, a0012
+    var match = trimmed.match(/(?:^|\/)([SA])-?0*(\d+)$/i);
+    if (match) {
+      var prefix = match[1].toUpperCase();
+      var num = parseInt(match[2], 10);
+      return prefix + '-' + num;
+    }
+    return null;
+  }
+
+  async function startBulkScanner() {
+    document.getElementById('scanner-screen').classList.remove('hidden');
+    updateScannerTray();
+
+    try {
+      scannerStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      var video = document.getElementById('scanner-video');
+      video.srcObject = scannerStream;
+      video.setAttribute('playsinline', true);
+      video.play();
+      scannerAnimId = requestAnimationFrame(scanFrame);
+    } catch (err) {
+      alert('Tidak dapat mengakses kamera: ' + (err.message || 'Periksa izin kamera.'));
+      stopBulkScanner();
+    }
+  }
+
+  function stopBulkScanner() {
+    if (scannerAnimId) {
+      cancelAnimationFrame(scannerAnimId);
+      scannerAnimId = null;
+    }
+    if (scannerStream) {
+      scannerStream.getTracks().forEach(function(track) { track.stop(); });
+      scannerStream = null;
+    }
+    document.getElementById('scanner-screen').classList.add('hidden');
+    document.getElementById('detected-banner').classList.add('hidden');
+    currentDetectedId = null;
+  }
+
+  function finishBulkScanner() {
+    stopBulkScanner();
+    renderScannedItemsForm();
+    calcTotals();
+  }
+
+  function scanFrame() {
+    var video = document.getElementById('scanner-video');
+    var canvas = document.getElementById('scanner-canvas');
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      var ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      var foundCode = null;
+
+      // Try jsQR
+      if (typeof jsQR !== 'undefined') {
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var qrResult = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'dontInvert'
+        });
+        if (qrResult && qrResult.data) {
+          foundCode = parseScannedQrText(qrResult.data);
+        }
+      }
+
+      if (foundCode) {
+        handleQrDetected(foundCode);
+      }
+    }
+
+    scannerAnimId = requestAnimationFrame(scanFrame);
+  }
+
+  function handleQrDetected(codeId) {
+    currentDetectedId = codeId;
+    var banner = document.getElementById('detected-banner');
+    var titleEl = document.getElementById('det-name');
+    var subEl = document.getElementById('det-sub');
+    var pickBtn = document.getElementById('btn-pick-action');
+
+    var isCashier = codeId.startsWith('A-');
+    var labelName = isCashier ? 'Akrilik ' + codeId : 'Stiker ' + codeId;
+
+    banner.classList.remove('hidden');
+    titleEl.textContent = labelName;
+
+    if (scannedItems.has(codeId)) {
+      subEl.textContent = 'Sudah masuk keranjang';
+      subEl.style.color = '#f59e0b';
+      pickBtn.disabled = true;
+      pickBtn.textContent = 'TERPILIH';
+    } else {
+      subEl.textContent = 'Ditemukan! Siap ditambahkan';
+      subEl.style.color = '#a1a1aa';
+      pickBtn.disabled = false;
+      pickBtn.textContent = '+ PILIH';
+
+      // Auto-add debounce (if held in frame for 0.4s)
+      var now = Date.now();
+      if (lastAddedId !== codeId || now - lastAddedTime > 1200) {
+        lastAddedId = codeId;
+        lastAddedTime = now;
+        addCurrentDetected();
+      }
+    }
+  }
+
+  function addCurrentDetected() {
+    if (!currentDetectedId) return;
+    if (!scannedItems.has(currentDetectedId)) {
+      scannedItems.add(currentDetectedId);
+      playBeep();
+      triggerHaptic();
+      updateScannerTray();
+      handleQrDetected(currentDetectedId);
+    }
+  }
+
+  function removeScannedItem(id) {
+    scannedItems.delete(id);
+    updateScannerTray();
+    renderScannedItemsForm();
+    calcTotals();
+  }
+
+  function clearScannedItems() {
+    scannedItems.clear();
+    renderScannedItemsForm();
+    calcTotals();
+  }
+
+  function updateScannerTray() {
+    var count = scannedItems.size;
+    document.getElementById('scanner-badge-count').textContent = count + ' Item';
+    document.getElementById('btn-finish-count').textContent = count;
+
+    var tray = document.getElementById('scanner-tray');
+    tray.innerHTML = '';
+    scannedItems.forEach(function(item) {
+      var isAcrylic = item.startsWith('A-');
+      var chip = document.createElement('div');
+      chip.style.cssText = 'background:' + (isAcrylic ? '#fef08a' : '#27272a') + '; color:' + (isAcrylic ? '#09090b' : '#ffffff') + '; border:1px solid #3f3f46; border-radius:9999px; padding:0.3rem 0.65rem; font-size:0.75rem; font-weight:800; display:flex; align-items:center; gap:0.4rem; white-space:nowrap;';
+      chip.innerHTML = item + ' <span onclick="removeScannedItem(\'' + item + '\')" style="color:#ef4444; cursor:pointer; font-size:0.9rem;">&times;</span>';
+      tray.appendChild(chip);
+    });
+  }
+
+  function renderScannedItemsForm() {
+    var section = document.getElementById('scanned-items-section');
+    var tray = document.getElementById('chips-tray');
+    var countEl = document.getElementById('tray-count');
+    var count = scannedItems.size;
+
+    countEl.textContent = count;
+    tray.innerHTML = '';
+
+    if (count > 0) {
+      section.classList.remove('hidden');
+      scannedItems.forEach(function(item) {
+        var isAcrylic = item.startsWith('A-');
+        var chip = document.createElement('div');
+        chip.className = 'chip' + (isAcrylic ? ' acrylic' : '');
+        chip.innerHTML = item + ' <span class="chip-del" onclick="removeScannedItem(\'' + item + '\')">&times;</span>';
+        tray.appendChild(chip);
+      });
+    } else {
+      section.classList.add('hidden');
+    }
+  }
+
+  // ==========================================
+  // CALCULATOR & FORM LOGIC
+  // ==========================================
   function calcTotals() {
     var sFrom = parseInt(document.getElementById('s-from').value, 10);
     var sTo = parseInt(document.getElementById('s-to').value, 10);
     var aFrom = parseInt(document.getElementById('a-from').value, 10);
     var aTo = parseInt(document.getElementById('a-to').value, 10);
 
-    var sQty = (!isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo) ? (sTo - sFrom + 1) : 0;
-    var aQty = (!isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo) ? (aTo - aFrom + 1) : 0;
+    var rangeSQty = (!isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo) ? (sTo - sFrom + 1) : 0;
+    var rangeAQty = (!isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo) ? (aTo - aFrom + 1) : 0;
+
+    // Count items from camera bulk scan
+    var scanSQty = 0;
+    var scanAQty = 0;
+    scannedItems.forEach(function(id) {
+      if (id.startsWith('A-')) scanAQty++;
+      else scanSQty++;
+    });
+
+    var totalSQty = rangeSQty + scanSQty;
+    var totalAQty = rangeAQty + scanAQty;
 
     var sPrice = currentPricing.price_vinyl_table || 10000;
     var aPrice = currentPricing.price_acrylic_cashier || 25000;
     var sComm = currentUser ? (currentUser.commission_table || 3000) : 3000;
     var aComm = currentUser ? (currentUser.commission_cashier || 7000) : 7000;
 
-    var sSubtotal = sQty * sPrice;
-    var aSubtotal = aQty * aPrice;
+    var sSubtotal = totalSQty * sPrice;
+    var aSubtotal = totalAQty * aPrice;
     var grandTotal = sSubtotal + aSubtotal;
-    var totalComm = (sQty * sComm) + (aQty * aComm);
+    var totalComm = (totalSQty * sComm) + (totalAQty * aComm);
 
-    document.getElementById('calc-s-label').textContent = 'Stiker (' + sQty + ' pcs x ' + formatRp(sPrice) + '):';
+    document.getElementById('calc-s-label').textContent = 'Stiker (' + totalSQty + ' pcs x ' + formatRp(sPrice) + '):';
     document.getElementById('calc-s-val').textContent = formatRp(sSubtotal);
 
-    document.getElementById('calc-a-label').textContent = 'Akrilik (' + aQty + ' pcs x ' + formatRp(aPrice) + '):';
+    document.getElementById('calc-a-label').textContent = 'Akrilik (' + totalAQty + ' pcs x ' + formatRp(aPrice) + '):';
     document.getElementById('calc-a-val').textContent = formatRp(aSubtotal);
 
     document.getElementById('calc-bill-total').textContent = formatRp(grandTotal);
     document.getElementById('calc-comm-earned').textContent = 'Estimasi Komisi Sales: ' + formatRp(totalComm);
 
-    if (sQty > 0) {
-      document.getElementById('s-hint').textContent = 'Mengaktifkan: S-' + sFrom + ' s/d S-' + sTo + ' (' + sQty + ' stiker)';
+    if (rangeSQty > 0) {
+      document.getElementById('s-hint').textContent = 'Mengaktifkan: S-' + sFrom + ' s/d S-' + sTo + ' (' + rangeSQty + ' stiker)';
       document.getElementById('s-hint').style.color = '#16a34a';
     } else {
       document.getElementById('s-hint').textContent = 'Akan mengaktifkan S-[dari] sampai S-[sampai]';
       document.getElementById('s-hint').style.color = '#71717a';
     }
 
-    if (aQty > 0) {
-      document.getElementById('a-hint').textContent = 'Mengaktifkan: A-' + aFrom + ' s/d A-' + aTo + ' (' + aQty + ' akrilik)';
+    if (rangeAQty > 0) {
+      document.getElementById('a-hint').textContent = 'Mengaktifkan: A-' + aFrom + ' s/d A-' + aTo + ' (' + rangeAQty + ' akrilik)';
       document.getElementById('a-hint').style.color = '#16a34a';
     } else {
       document.getElementById('a-hint').textContent = 'Akan mengaktifkan A-[dari] sampai A-[sampai]';
@@ -833,7 +1303,7 @@
     var businessWa = document.getElementById('act-business-wa').value || complaintWa;
 
     if (currentSelectedMode === 'shield' && !complaintWa) {
-      alertEl.textContent = 'Nomor WhatsApp Penanganan Komplain wajib diisi jika mode Reputation Shield aktif.';
+      alertEl.textContent = 'WhatsApp Penanganan Komplain wajib diisi jika mode Reputation Shield aktif.';
       alertEl.className = 'alert alert-error';
       return;
     }
@@ -843,11 +1313,11 @@
     var aFrom = parseInt(document.getElementById('a-from').value, 10);
     var aTo = parseInt(document.getElementById('a-to').value, 10);
 
-    var hasTable = !isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo;
-    var hasCashier = !isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo;
+    var hasRange = (!isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo) || (!isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo);
+    var hasScanned = scannedItems.size > 0;
 
-    if (!hasTable && !hasCashier) {
-      alertEl.textContent = 'Harap isi minimal rentang stiker atau akrilik.';
+    if (!hasRange && !hasScanned) {
+      alertEl.textContent = 'Harap isi rentang nomor atau scan stiker/akrilik terlebih dahulu.';
       alertEl.className = 'alert alert-error';
       return;
     }
@@ -864,10 +1334,11 @@
         complaint_whatsapp: complaintWa || null,
         business_whatsapp: businessWa || null,
         mode: currentSelectedMode,
-        table_start: hasTable ? sFrom : null,
-        table_end: hasTable ? sTo : null,
-        cashier_start: hasCashier ? aFrom : null,
-        cashier_end: hasCashier ? aTo : null
+        items: Array.from(scannedItems),
+        table_start: (!isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo) ? sFrom : null,
+        table_end: (!isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo) ? sTo : null,
+        cashier_start: (!isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo) ? aFrom : null,
+        cashier_end: (!isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo) ? aTo : null
       };
 
       var res = await fetch('/api/sales/activate', {
@@ -896,17 +1367,18 @@
           showDashboard();
         }
 
-        // Reset form inputs
+        // Reset form inputs & scanned items
         document.getElementById('act-merchant').value = '';
         document.getElementById('act-maps').value = '';
         document.getElementById('act-complaint-wa').value = '';
         document.getElementById('act-business-wa').value = '';
         document.getElementById('same-wa-checkbox').checked = true;
         toggleSameWa();
+        document.getElementById('s-from').value = '';
         document.getElementById('s-to').value = '';
         document.getElementById('a-from').value = '';
         document.getElementById('a-to').value = '';
-        calcTotals();
+        clearScannedItems();
       }
     } catch (err) {
       alertEl.textContent = 'Terjadi kesalahan jaringan.';

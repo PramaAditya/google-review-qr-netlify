@@ -218,12 +218,54 @@ export default async (req: Request, context: Context) => {
 
       const batchStatements = [];
       const activatedStickers: string[] = [];
-      let tableIndex = 1;
+      let sCount = 0;
+      let aCount = 0;
 
-      // 2. Queue Stiker Meja Vinyl (S-[N])
+      // 1. Process explicit individual items (from Camera Bulk Scanner)
+      const rawItems: string[] = Array.isArray(body.items) ? body.items : [];
+      for (const item of rawItems) {
+        const cleanId = String(item).trim().toUpperCase();
+        if (!cleanId || activatedStickers.includes(cleanId)) continue;
+        const isCashier = cleanId.startsWith("A-");
+        const stickerType = isCashier ? "acrylic_cashier" : "vinyl_table";
+        const zone = isCashier ? "cashier" : "indoor";
+        const mode = isCashier ? "direct" : "inherit";
+        const tableNo = isCashier ? "Kasir Utama" : `Titik ${cleanId}`;
+
+        if (isCashier) aCount++;
+        else sCount++;
+
+        activatedStickers.push(cleanId);
+        batchStatements.push({
+          sql: `INSERT INTO qr_links (
+                  id, merchant_id, sales_rep_id, merchant_name, table_no, zone, 
+                  sticker_type, mode, target_url, negative_feedback_url, status, assigned_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)
+                ON CONFLICT(id) DO UPDATE SET
+                  merchant_id = excluded.merchant_id,
+                  sales_rep_id = excluded.sales_rep_id,
+                  merchant_name = excluded.merchant_name,
+                  table_no = excluded.table_no,
+                  zone = excluded.zone,
+                  sticker_type = excluded.sticker_type,
+                  mode = excluded.mode,
+                  target_url = excluded.target_url,
+                  negative_feedback_url = excluded.negative_feedback_url,
+                  status = excluded.status,
+                  assigned_at = CURRENT_TIMESTAMP;`,
+          args: [cleanId, merchantId, stdPhone, merchantName, tableNo, zone, stickerType, mode, mapsUrl, negativeFeedbackUrl],
+        });
+      }
+
+      let tableIndex = sCount + 1;
+
+      // 2. Queue Stiker Meja Vinyl Range (S-[N])
       if (tableStart !== null && tableEnd !== null && tableStart <= tableEnd) {
         for (let i = tableStart; i <= tableEnd; i++) {
           const id = `S-${i}`;
+          if (activatedStickers.includes(id)) continue;
+          sCount++;
           activatedStickers.push(id);
           batchStatements.push({
             sql: `INSERT INTO qr_links (
@@ -261,6 +303,8 @@ export default async (req: Request, context: Context) => {
       if (cashierStart !== null && cashierEnd !== null && cashierStart <= cashierEnd) {
         for (let i = cashierStart; i <= cashierEnd; i++) {
           const id = `A-${i}`;
+          if (activatedStickers.includes(id)) continue;
+          aCount++;
           activatedStickers.push(id);
           batchStatements.push({
             sql: `INSERT INTO qr_links (
@@ -293,14 +337,14 @@ export default async (req: Request, context: Context) => {
       }
 
       if (batchStatements.length === 0) {
-        return jsonResponse({ error: "Tentukan minimal rentang stiker meja atau akrilik kasir." }, 400);
+        return jsonResponse({ error: "Tentukan minimal rentang nomor atau scan stiker/akrilik." }, 400);
       }
 
       // Execute atomic batch
       await db.batch(batchStatements);
 
-      const tableTotal = tableStart !== null && tableEnd !== null ? (tableEnd - tableStart + 1) : 0;
-      const cashierTotal = cashierStart !== null && cashierEnd !== null ? (cashierEnd - cashierStart + 1) : 0;
+      const tableTotal = sCount;
+      const cashierTotal = aCount;
       const commEarned = (tableTotal * Number(rep.commission_table || 3000)) +
                          (cashierTotal * Number(rep.commission_cashier || 7000));
       const billTotal = (tableTotal * 10000) + (cashierTotal * 25000);

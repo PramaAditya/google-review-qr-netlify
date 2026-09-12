@@ -137,4 +137,38 @@ describe("Sales PWA Backend APIs", () => {
     await db.execute("DELETE FROM qr_links WHERE id = 'A-99';");
     await db.execute("DELETE FROM merchants WHERE name = 'Test Direct Cafe';");
   });
+  it("activates loose non-sequential items from camera bulk scan (body.items)", async () => {
+    const req = new Request("https://grqrr.netlify.app/api/sales/activate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: "081234567890",
+        pin: "1234",
+        merchant_name: "Test Loose Scanner Cafe",
+        maps_url: "https://search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg",
+        complaint_whatsapp: "081298765432",
+        mode: "shield",
+        items: ["S-81", "S-12", "A-5"],
+      }),
+    });
+
+    const res = await salesHandler(req, {} as any);
+    expect(res.status).toBe(200);
+
+    const data = await res.json();
+    expect(data.success).toBe(true);
+    expect(data.summary.table_stickers).toBe(2);
+    expect(data.summary.cashier_acrylics).toBe(1);
+    expect(data.summary.bill_total_idr).toBe(45000);
+    expect(data.summary.commission_earned_idr).toBe(13000);
+
+    const checkDb = await db.execute({
+      sql: "SELECT id, status, sticker_type, mode FROM qr_links WHERE id IN ('S-81', 'S-12', 'A-5');",
+      args: [],
+    });
+    expect(checkDb.rows.length).toBe(3);
+
+    await db.execute("DELETE FROM qr_links WHERE id IN ('S-81', 'S-12', 'A-5');");
+    await db.execute("DELETE FROM merchants WHERE name = 'Test Loose Scanner Cafe';");
+  });
 });

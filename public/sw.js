@@ -1,6 +1,7 @@
-const CACHE_NAME = "grqrr-sales-v1";
+const CACHE_NAME = "grqrr-sales-v2";
 const ASSETS_TO_CACHE = [
   "/sales",
+  "/sales/jsqr.min.js",
   "/manifest.json",
   "/icons/icon.svg",
   "/favicon.ico"
