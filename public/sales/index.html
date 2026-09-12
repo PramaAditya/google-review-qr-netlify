@@ -708,16 +708,12 @@
       <div id="act-alert" class="alert hidden"></div>
 
       <form id="activation-form">
-        <div class="form-group">
-          <label for="act-merchant">Nama Bisnis / Toko *</label>
-          <input type="text" id="act-merchant" placeholder="Misal: Lalana Space, Barbershop 99" required>
-        </div>
-
+        <!-- Field 1: Link Google Maps Toko (Top Field) -->
         <div class="form-group">
           <label for="act-maps">Link Google Maps Toko *</label>
           <div class="input-with-action">
-            <input type="url" id="act-maps" placeholder="https://maps.app.goo.gl/... atau link Maps toko" required oninput="onMapsInputChanged()">
-            <button type="button" id="btn-verify-maps" class="btn-verify-icon" onclick="verifyMapsUrl()" title="Verifikasi Link Google Maps & Ambil Place ID">
+            <input type="url" id="act-maps" placeholder="https://maps.app.goo.gl/... atau link Maps" required oninput="onMapsInputChanged()">
+            <button type="button" id="btn-verify-maps" class="btn-verify-icon" onclick="verifyMapsUrl()" title="Verifikasi Link Google Maps & Ambil Nama Toko">
               <span id="verify-icon-inner">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
@@ -727,6 +723,15 @@
             </button>
           </div>
           <div id="maps-verify-badge" class="maps-verified-card hidden"></div>
+          <div style="font-size: 0.72rem; color: #71717a; margin-top: 0.35rem;">
+            Tempel link Bagikan dari aplikasi Google Maps di HP. Ketuk tombol untuk verifikasi & isi nama toko otomatis.
+          </div>
+        </div>
+
+        <!-- Field 2: Nama Bisnis / Toko (Auto-populated from Maps) -->
+        <div class="form-group">
+          <label for="act-merchant">Nama Bisnis / Toko *</label>
+          <input type="text" id="act-merchant" placeholder="Otomatis terisi dari Google Maps atau ketik manual" required>
         </div>
 
         <!-- 1. Mode Selection Toggle -->
@@ -1107,9 +1112,15 @@
       var data = resJson.data;
       resolvedDirectReviewUrl = data.directReviewUrl;
 
-      // Auto-fill Merchant Name if empty
-      if (data.name && (!merchantNameInput.value || merchantNameInput.value.trim() === '')) {
+      // Auto-populate Merchant Name from verified Google Maps data
+      if (data.name) {
         merchantNameInput.value = data.name;
+        merchantNameInput.style.borderColor = '#16a34a';
+        merchantNameInput.style.backgroundColor = '#f0fdf4';
+        setTimeout(function() {
+          merchantNameInput.style.borderColor = '';
+          merchantNameInput.style.backgroundColor = '';
+        }, 1600);
       }
 
       // Success UI update
