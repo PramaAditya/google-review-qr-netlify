@@ -239,15 +239,12 @@ function renderShieldPage(
       to { opacity: 1; transform: scale(1) translateY(0); }
     }
     .apology-avatar {
-      width: 135px;
-      height: 135px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2.5px solid #18181b;
-      box-shadow: 4px 4px 0px #18181b;
-      margin: 0 auto 1.25rem auto;
+      width: 180px;
+      height: 180px;
+      object-fit: contain;
+      margin: 0 auto 0.75rem auto;
       display: block;
-      background: #ffffff;
+      background: transparent;
     }
     .btn-wa {
       display: flex;
