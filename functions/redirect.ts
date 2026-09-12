@@ -283,14 +283,6 @@ function renderShieldPage(
     .alt-link:hover {
       color: #18181b;
     }
-    .footer {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #71717a;
-      margin-top: 1.75rem;
-      border-top: 1.5px dashed #e4e4e7;
-      padding-top: 1rem;
-    }
   </style>
 </head>
 <body>
@@ -340,9 +332,6 @@ function renderShieldPage(
       </div>
     </div>
 
-    <div class="footer">
-      Google Review Protection &bull; greview-qr
-    </div>
   </div>
 
   <script>
