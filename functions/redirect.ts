@@ -148,7 +148,7 @@ function renderShieldPage(
       background: #ffffff;
       max-width: 440px;
       width: 100%;
-      padding: 2.25rem 2rem;
+      padding: 2.5rem 2rem 2rem 2rem;
       border-radius: 24px;
       border: 2px solid #18181b;
       box-shadow: 5px 5px 0px #18181b;
@@ -170,7 +170,7 @@ function renderShieldPage(
       margin-bottom: 1rem;
     }
     h1 {
-      font-size: 1.4rem;
+      font-size: 1.45rem;
       font-weight: 800;
       margin-bottom: 0.5rem;
       color: #18181b;
@@ -180,49 +180,53 @@ function renderShieldPage(
       color: #52525b;
       font-size: 0.95rem;
       line-height: 1.5;
-      margin-bottom: 1.75rem;
+      margin-bottom: 2rem;
     }
+
+    /* Google Review Hollow Stars Container */
     .stars-container {
       display: flex;
       justify-content: center;
-      gap: 0.5rem;
+      align-items: center;
+      gap: 0.75rem;
       margin-bottom: 1.75rem;
+      touch-action: manipulation;
     }
     .star-btn {
-      background: #ffffff;
-      border: 2px solid #18181b;
-      border-radius: 14px;
-      width: 58px;
-      height: 64px;
-      display: flex;
-      flex-direction: column;
+      background: transparent;
+      border: none;
+      padding: 0.25rem;
+      cursor: pointer;
+      outline: none;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      box-shadow: 3px 3px 0px #18181b;
-      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
-      text-decoration: none;
-      color: #f59e0b;
+      -webkit-tap-highlight-color: transparent;
     }
-    .star-btn:hover, .star-btn:active {
-      transform: translate(2px, 2px);
-      box-shadow: 1px 1px 0px #18181b;
-      background: #fef9c3;
+    .star-svg {
+      width: 46px;
+      height: 46px;
+      fill: none;
+      stroke: #71717a;
+      stroke-width: 1.75;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      transition: fill 0.12s ease, stroke 0.12s ease, transform 0.12s ease;
     }
-    .star-icon {
-      font-size: 1.6rem;
-      line-height: 1;
-      margin-bottom: 0.2rem;
+    .star-btn:hover .star-svg,
+    .star-btn:active .star-svg {
+      transform: scale(1.12);
     }
-    .star-num {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #18181b;
+    .star-svg.filled {
+      fill: #fbbc04;
+      stroke: #e37400;
     }
+
     .helper-text {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 500;
       color: #71717a;
+      min-height: 1.25rem;
     }
 
     /* Negative Empathy View with Illustration */
@@ -296,30 +300,26 @@ function renderShieldPage(
       <h1>${displayTitle}</h1>
       <p class="subtitle">Bagaimana kepuasan Anda hari ini?</p>
       
-      <div class="stars-container">
-        <button class="star-btn" onclick="handleLowRating(1)">
-          <span class="star-icon">&#9733;</span>
-          <span class="star-num">1</span>
+      <!-- Native Google Review Hollow Outline Stars -->
+      <div class="stars-container" id="stars-group" onmouseleave="resetStars()">
+        <button type="button" class="star-btn" aria-label="1 Bintang" onmouseenter="hoverStars(1)" onclick="rate(1)">
+          <svg class="star-svg" id="star-1" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
         </button>
-        <button class="star-btn" onclick="handleLowRating(2)">
-          <span class="star-icon">&#9733;</span>
-          <span class="star-num">2</span>
+        <button type="button" class="star-btn" aria-label="2 Bintang" onmouseenter="hoverStars(2)" onclick="rate(2)">
+          <svg class="star-svg" id="star-2" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
         </button>
-        <button class="star-btn" onclick="handleLowRating(3)">
-          <span class="star-icon">&#9733;</span>
-          <span class="star-num">3</span>
+        <button type="button" class="star-btn" aria-label="3 Bintang" onmouseenter="hoverStars(3)" onclick="rate(3)">
+          <svg class="star-svg" id="star-3" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
         </button>
-        <a href="/id/${id}?rate=4" class="star-btn">
-          <span class="star-icon">&#9733;</span>
-          <span class="star-num">4</span>
-        </a>
-        <a href="/id/${id}?rate=5" class="star-btn">
-          <span class="star-icon">&#9733;</span>
-          <span class="star-num">5</span>
-        </a>
+        <button type="button" class="star-btn" aria-label="4 Bintang" onmouseenter="hoverStars(4)" onclick="rate(4)">
+          <svg class="star-svg" id="star-4" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+        </button>
+        <button type="button" class="star-btn" aria-label="5 Bintang" onmouseenter="hoverStars(5)" onclick="rate(5)">
+          <svg class="star-svg" id="star-5" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+        </button>
       </div>
       
-      <p class="helper-text">Ketuk bintang untuk membagikan ulasan Anda</p>
+      <p class="helper-text" id="star-hint">Ketuk bintang untuk menilai</p>
     </div>
 
     <div id="negative-view">
@@ -346,11 +346,55 @@ function renderShieldPage(
   </div>
 
   <script>
-    function handleLowRating(rating) {
-      document.getElementById('rating-view').style.display = 'none';
-      document.getElementById('negative-view').style.display = 'block';
-      // Fire-and-forget background ping to log rating
-      fetch('/id/${id}?rate=' + rating + '&log_only=1').catch(function(){});
+    var selectedVal = 0;
+    var labels = ["", "Kurang Memuaskan", "Cukup", "Bagus", "Sangat Bagus", "Luar Biasa!"];
+
+    function setStars(count) {
+      for (var i = 1; i <= 5; i++) {
+        var el = document.getElementById('star-' + i);
+        if (i <= count) {
+          el.classList.add('filled');
+        } else {
+          el.classList.remove('filled');
+        }
+      }
+      var hint = document.getElementById('star-hint');
+      if (count > 0 && count <= 5) {
+        hint.textContent = labels[count];
+        hint.style.color = '#18181b';
+        hint.style.fontWeight = '700';
+      } else {
+        hint.textContent = 'Ketuk bintang untuk menilai';
+        hint.style.color = '#71717a';
+        hint.style.fontWeight = '500';
+      }
+    }
+
+    function hoverStars(count) {
+      if (selectedVal === 0) setStars(count);
+    }
+
+    function resetStars() {
+      if (selectedVal === 0) setStars(0);
+    }
+
+    function rate(rating) {
+      selectedVal = rating;
+      setStars(rating);
+
+      if (rating <= 3) {
+        // Log negative rating silently in background
+        fetch('/id/${id}?rate=' + rating + '&log_only=1').catch(function(){});
+        setTimeout(function() {
+          document.getElementById('rating-view').style.display = 'none';
+          document.getElementById('negative-view').style.display = 'block';
+        }, 180);
+      } else {
+        // Positive rating: forward directly to Google Review
+        setTimeout(function() {
+          window.location.href = '/id/${id}?rate=' + rating;
+        }, 180);
+      }
     }
   </script>
 </body>

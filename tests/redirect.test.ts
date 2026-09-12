@@ -52,7 +52,8 @@ describe("Google Review QR Redirect Function", () => {
     expect(html).toContain("Lalana Space - Meja 1");
     expect(html).toContain("Meja 01");
     expect(html).toContain("Hubungi Manager via WhatsApp");
-    expect(html).toContain("/id/lalana-01?rate=5");
+    expect(html).toContain("rate(5)");
+    expect(html).toContain("/id/lalana-01?rate=");
   });
 
   it("redirects to Google Review when 5-star rating chosen on 'lalana-01'", async () => {
