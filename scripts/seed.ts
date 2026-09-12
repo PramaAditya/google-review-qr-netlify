@@ -50,7 +50,7 @@ async function seed() {
       merchant_name: "Lalana Space - Meja 1",
       table_no: "Meja 01",
       zone: "outdoor",
-      mode: "direct",
+      mode: "shield",
       target_url: lalanaReviewUrl,
       negative_feedback_url: "https://wa.me/6281234567890?text=Halo+Manager+Lalana+Space",
       status: "active",

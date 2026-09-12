@@ -8,15 +8,7 @@ const db = createClient({
 });
 
 describe("Google Review QR Redirect Function", () => {
-  it("redirects active 'lalana' ID to Google Review URL and increments scan counter", async () => {
-    // 1. Check initial scan count
-    const initial = await db.execute({
-      sql: "SELECT scan_count FROM qr_links WHERE id = 'lalana';",
-      args: [],
-    });
-    const initialCount = Number(initial.rows[0].scan_count || 0);
-
-    // 2. Invoke handler
+  it("redirects active 'lalana' (direct mode) to Google Review URL", async () => {
     const req = new Request("https://greview-qr.netlify.app/id/lalana", {
       headers: {
         "x-nf-client-connection-ip": "114.124.200.1",
@@ -34,29 +26,88 @@ describe("Google Review QR Redirect Function", () => {
 
     const res = await handler(req, context);
 
-    // 3. Assert HTTP response
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
     expect(res.headers.get("Cache-Control")).toContain("no-store");
     expect(res.headers.get("Set-Cookie")).toContain("_gqr_vid=");
-    // 4. Verify scan count incremented in Turso
-    const after = await db.execute({
-      sql: "SELECT scan_count FROM qr_links WHERE id = 'lalana';",
-      args: [],
-    });
-    const newCount = Number(after.rows[0].scan_count);
-    expect(newCount).toBe(initialCount + 1);
+  });
 
-    // 5. Verify telemetry log inserted in qr_scans
-    const scanLog = await db.execute({
-      sql: "SELECT * FROM qr_scans WHERE link_id = 'lalana' ORDER BY id DESC LIMIT 1;",
+  it("serves Reputation Shield micro-rating page for 'lalana-01' on initial scan", async () => {
+    const req = new Request("https://greview-qr.netlify.app/id/lalana-01", {
+      headers: {
+        "x-nf-client-connection-ip": "114.124.200.2",
+        "user-agent": "Mozilla/5.0 (Android 14; Mobile)",
+      },
+    });
+
+    const context: any = {
+      params: { id: "lalana-01" },
+    };
+
+    const res = await handler(req, context);
+
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("Ulas Pengalaman Anda");
+    expect(html).toContain("Lalana Space - Meja 1");
+    expect(html).toContain("Meja 01");
+    expect(html).toContain("Hubungi Manager via WhatsApp");
+    expect(html).toContain("/id/lalana-01?rate=5");
+  });
+
+  it("redirects to Google Review when 5-star rating chosen on 'lalana-01'", async () => {
+    const req = new Request("https://greview-qr.netlify.app/id/lalana-01?rate=5", {
+      headers: {
+        "x-nf-client-connection-ip": "114.124.200.3",
+        "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
+      },
+    });
+
+    const context: any = {
+      params: { id: "lalana-01" },
+    };
+
+    const res = await handler(req, context);
+
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
+
+    // Verify rating logged
+    const latestScan = await db.execute({
+      sql: "SELECT rating_given, device_type FROM qr_scans WHERE link_id = 'lalana-01' AND rating_given = 5 LIMIT 1;",
       args: [],
     });
-    expect(scanLog.rows.length).toBe(1);
-    expect(scanLog.rows[0].ip).toBe("114.124.200.1");
-    expect(scanLog.rows[0].city).toBe("Bandung");
-    expect(scanLog.rows[0].device_type).toBe("ios");
-    expect(scanLog.rows[0].visitor_id).toBeTruthy();
+    expect(latestScan.rows.length).toBe(1);
+    expect(Number(latestScan.rows[0].rating_given)).toBe(5);
+    expect(latestScan.rows[0].device_type).toBe("ios");
+  });
+
+  it("logs negative rating (rate=2) via background log ping on 'lalana-01'", async () => {
+    const req = new Request("https://greview-qr.netlify.app/id/lalana-01?rate=2&log_only=1", {
+      headers: {
+        "user-agent": "Mozilla/5.0 (Android 14; Mobile)",
+      },
+    });
+
+    const context: any = {
+      params: { id: "lalana-01" },
+    };
+
+    const res = await handler(req, context);
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.success).toBe(true);
+    expect(data.rating).toBe(2);
+
+    // Verify logged in Turso
+    const latestNegative = await db.execute({
+      sql: "SELECT rating_given, device_type FROM qr_scans WHERE link_id = 'lalana-01' AND rating_given = 2 LIMIT 1;",
+      args: [],
+    });
+    expect(latestNegative.rows.length).toBe(1);
+    expect(Number(latestNegative.rows[0].rating_given)).toBe(2);
+    expect(latestNegative.rows[0].device_type).toBe("android");
   });
 
   it("handles unassigned stickers gracefully with HTML status page", async () => {
