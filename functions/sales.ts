@@ -155,7 +155,7 @@ export default async (req: Request, context: Context) => {
         return jsonResponse({ error: "Autentikasi sales diperlukan." }, 401);
       }
       if (!merchantName) {
-        return jsonResponse({ error: "Nama kafe/merchant wajib diisi." }, 400);
+        return jsonResponse({ error: "Nama bisnis / toko wajib diisi." }, 400);
       }
       if (!mapsUrl) {
         return jsonResponse({ error: "Link Google Maps / Google Review wajib diisi." }, 400);
@@ -184,15 +184,18 @@ export default async (req: Request, context: Context) => {
       const negativeWaNumber = ownerWa || "6281234567890";
       const negativeFeedbackUrl = `https://wa.me/${negativeWaNumber}?text=Halo+Manager+${encodeURIComponent(merchantName)}+Saya+ada+masukan`;
 
+      const selectedMode = (body.mode === "direct") ? "direct" : "shield";
+
       // 1. Insert Merchant
       await db.execute({
         sql: `INSERT INTO merchants (id, name, owner_whatsapp, plan, default_mode, sales_rep_id)
-              VALUES (?, ?, ?, 'pro', 'shield', ?)
+              VALUES (?, ?, ?, 'pro', ?, ?)
               ON CONFLICT(id) DO UPDATE SET
                 name = excluded.name,
                 owner_whatsapp = excluded.owner_whatsapp,
+                default_mode = excluded.default_mode,
                 sales_rep_id = excluded.sales_rep_id;`,
-        args: [merchantId, merchantName, ownerWa, stdPhone],
+        args: [merchantId, merchantName, ownerWa, selectedMode, stdPhone],
       });
 
       const batchStatements = [];

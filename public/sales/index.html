@@ -75,6 +75,30 @@
       transform: translate(1px, 1px);
     }
 
+    /* Pitching Demo Banner */
+    .btn-demo-pitch {
+      width: 100%;
+      background: #fef08a;
+      border: 2px solid #18181b;
+      border-radius: 14px;
+      box-shadow: 3px 3px 0px #18181b;
+      color: #18181b;
+      font-weight: 800;
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-demo-pitch:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #18181b;
+    }
+
     /* Form Inputs */
     .form-group {
       margin-bottom: 1.1rem;
@@ -115,6 +139,40 @@
       font-weight: 700;
       color: #71717a;
       text-align: center;
+    }
+
+    /* Mode Selection Cards */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-top: 0.35rem;
+    }
+    .mode-card {
+      background: #ffffff;
+      border: 2px solid #18181b;
+      border-radius: 14px;
+      padding: 0.8rem 0.7rem;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #18181b;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+    .mode-card.active {
+      background: #dbeafe;
+      border-color: #0284c7;
+      box-shadow: 3px 3px 0px #0284c7;
+    }
+    .mode-name {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #18181b;
+      margin-bottom: 0.25rem;
+    }
+    .mode-desc {
+      font-size: 0.7rem;
+      line-height: 1.35;
+      color: #52525b;
     }
 
     /* Buttons */
@@ -222,6 +280,74 @@
       margin-top: 0.2rem;
     }
 
+    /* Modal Pitching Demo */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #ffffff;
+      border: 2px solid #18181b;
+      border-radius: 24px;
+      box-shadow: 6px 6px 0px #18181b;
+      max-width: 400px;
+      width: 100%;
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      position: relative;
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #f4f4f5;
+      border: 1.5px solid #18181b;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .demo-stars {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1.25rem 0;
+    }
+    .demo-star-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+    .demo-star-svg {
+      width: 40px;
+      height: 40px;
+      fill: none;
+      stroke: #71717a;
+      stroke-width: 1.75;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+    .demo-star-svg.filled {
+      fill: #fbbc04;
+      stroke: #e37400;
+    }
+
     .hidden { display: none !important; }
   </style>
 </head>
@@ -238,7 +364,7 @@
       </div>
     </div>
     <p style="font-size: 0.9rem; color: #52525b; margin-bottom: 1.5rem;">
-      Portal aktivasi cepat stiker Google Review untuk sales representatif lapangan.
+      Portal aktivasi cepat stiker & akrilik Google Review untuk sales representatif lapangan.
     </p>
 
     <div id="login-alert" class="alert alert-error hidden"></div>
@@ -283,18 +409,23 @@
           <div id="stat-points" class="stat-val">0</div>
         </div>
       </div>
+
+      <!-- Pitching Demo Tool Button -->
+      <button type="button" class="btn-demo-pitch" onclick="openDemoModal()">
+        <span>Buka Simulasi Demo Shield (Tunjukkan ke Klien)</span>
+      </button>
     </div>
 
     <!-- Activation Form Card -->
     <div class="card">
-      <h2 style="font-size: 1.1rem; font-weight: 900; margin-bottom: 1rem;">Aktivasi Kafe Baru</h2>
+      <h2 style="font-size: 1.1rem; font-weight: 900; margin-bottom: 1rem;">Aktivasi Merchant / Bisnis</h2>
 
       <div id="act-alert" class="alert hidden"></div>
 
       <form id="activation-form">
         <div class="form-group">
-          <label for="act-merchant">Nama Kafe / Restoran *</label>
-          <input type="text" id="act-merchant" placeholder="Misal: Kopi Kenangan Dago" required>
+          <label for="act-merchant">Nama Bisnis / Toko *</label>
+          <input type="text" id="act-merchant" placeholder="Misal: Lalana Space, Barbershop 99" required>
         </div>
 
         <div class="form-group">
@@ -304,12 +435,27 @@
 
         <div class="form-group">
           <label for="act-owner-wa">WhatsApp Manajer / Toko (Opsional)</label>
-          <input type="tel" id="act-owner-wa" placeholder="08xxxxxxxxxx (Untuk laporan & alert)">
+          <input type="tel" id="act-owner-wa" placeholder="08xxxxxxxxxx (Untuk laporan & alert komplain)">
         </div>
 
-        <!-- Range Stiker Meja Vinyl (S-[N]) -->
+        <!-- Mode Selection Toggle -->
+        <div class="form-group">
+          <label>Mode Pengalihan Review</label>
+          <div class="mode-grid">
+            <div class="mode-card active" id="mode-shield" onclick="selectMode('shield')">
+              <div class="mode-name">Reputation Shield</div>
+              <div class="mode-desc">Bintang 4-5 ke Google, Bintang 1-3 dicegat ke WA Manajer.</div>
+            </div>
+            <div class="mode-card" id="mode-direct" onclick="selectMode('direct')">
+              <div class="mode-name">Direct Langsung</div>
+              <div class="mode-desc">Semua scan langsung buka form review Google Maps.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Range Stiker (S-[N]) -->
         <div class="form-group" style="border-top: 1.5px dashed #e4e4e7; padding-top: 1rem; margin-top: 1rem;">
-          <label>Stiker Meja Vinyl (S-[N])</label>
+          <label>Stiker (S-[N])</label>
           <div class="range-row">
             <input type="number" id="s-from" placeholder="Dari (No)" min="1" oninput="calcTotals()">
             <span class="range-sep">s/d</span>
@@ -320,9 +466,9 @@
           </div>
         </div>
 
-        <!-- Range Akrilik Kasir (A-[N]) -->
+        <!-- Range Akrilik (A-[N]) -->
         <div class="form-group">
-          <label>Akrilik Kasir (A-[N])</label>
+          <label>Akrilik (A-[N])</label>
           <div class="range-row">
             <input type="number" id="a-from" placeholder="Dari (No)" min="1" oninput="calcTotals()">
             <span class="range-sep">s/d</span>
@@ -336,15 +482,15 @@
         <!-- Real-time Bill & Commission Calculator -->
         <div class="calc-box">
           <div class="calc-row">
-            <span id="calc-s-label">Stiker Meja (0 pcs x Rp 10.000):</span>
+            <span id="calc-s-label">Stiker (0 pcs x Rp 10.000):</span>
             <span id="calc-s-val">Rp 0</span>
           </div>
           <div class="calc-row">
-            <span id="calc-a-label">Akrilik Kasir (0 pcs x Rp 25.000):</span>
+            <span id="calc-a-label">Akrilik (0 pcs x Rp 25.000):</span>
             <span id="calc-a-val">Rp 0</span>
           </div>
           <div class="calc-total">
-            <span>Total Tagihan ke Kafe:</span>
+            <span>Total Tagihan:</span>
             <span id="calc-bill-total">Rp 0</span>
           </div>
           <div class="comm-note" id="calc-comm-earned">
@@ -360,11 +506,77 @@
 
   </div>
 
+  <!-- 3. PITCHING SIMULATION MODAL -->
+  <div id="demo-modal" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <button type="button" class="modal-close" onclick="closeDemoModal()">×</button>
+      
+      <div id="demo-stage-rating">
+        <div style="font-size: 0.75rem; font-weight: 700; background: #fef08a; border: 1.5px solid #18181b; padding: 0.2rem 0.6rem; border-radius: 9999px; display: inline-block; margin-bottom: 0.75rem;">
+          SIMULASI MEJA 01
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 900; margin-bottom: 0.35rem;">Ulas Pengalaman Anda</h3>
+        <p style="font-size: 0.85rem; color: #52525b; margin-bottom: 1.25rem;">Bagaimana kepuasan Anda hari ini?</p>
+
+        <!-- Hollow stars interactive -->
+        <div class="demo-stars">
+          <button type="button" class="demo-star-btn" onclick="triggerDemoRating(1)">
+            <svg class="demo-star-svg" id="dstar-1" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button type="button" class="demo-star-btn" onclick="triggerDemoRating(2)">
+            <svg class="demo-star-svg" id="dstar-2" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button type="button" class="demo-star-btn" onclick="triggerDemoRating(3)">
+            <svg class="demo-star-svg" id="dstar-3" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button type="button" class="demo-star-btn" onclick="triggerDemoRating(4)">
+            <svg class="demo-star-svg" id="dstar-4" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button type="button" class="demo-star-btn" onclick="triggerDemoRating(5)">
+            <svg class="demo-star-svg" id="dstar-5" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+        </div>
+        <p style="font-size: 0.75rem; color: #71717a;">Minta klien ketuk bintang di atas untuk melihat cara kerjanya</p>
+      </div>
+
+      <!-- Apology View -->
+      <div id="demo-stage-apology" class="hidden">
+        <img src="/images/apology.jpg" style="width: 130px; height: 130px; object-fit: contain; margin: 0 auto 0.5rem auto; display: block;" alt="Karakter Maaf">
+        <h4 style="font-size: 1.1rem; font-weight: 900; margin-bottom: 0.35rem;">Mohon Maaf Atas Ketidaknyamanan</h4>
+        <p style="font-size: 0.8rem; color: #52525b; margin-bottom: 1rem;">
+          Komplain tamu langsung dicegat di sini dan tidak sampai ke Google Maps!
+        </p>
+        <div style="background: #22c55e; color: white; padding: 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 800; border: 1.5px solid #18181b; box-shadow: 2px 2px 0 #18181b;">
+          Hubungi Manager via WhatsApp
+        </div>
+        <div style="margin-top: 0.75rem;">
+          <button type="button" style="background: none; border: none; text-decoration: underline; color: #71717a; font-size: 0.75rem; cursor: pointer;" onclick="resetDemoRating()">
+            Coba simulasi bintang lagi
+          </button>
+        </div>
+      </div>
+
+      <!-- Positive Forward View -->
+      <div id="demo-stage-positive" class="hidden">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⭐</div>
+        <h4 style="font-size: 1.1rem; font-weight: 900; color: #16a34a; margin-bottom: 0.35rem;">Puas Bintang 4 / 5!</h4>
+        <p style="font-size: 0.85rem; color: #52525b; margin-bottom: 1rem;">
+          Pengunjung langsung diarahkan 100% otomatis ke form Google Review toko Anda untuk menambah ulasan bintang 5 publik!
+        </p>
+        <button type="button" class="btn-primary" style="background: #18181b; font-size: 0.85rem;" onclick="resetDemoRating()">
+          Coba Bintang Lain
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
 <script>
   var currentUser = null;
   var currentPricing = { price_vinyl_table: 10000, price_acrylic_cashier: 25000 };
+  var currentSelectedMode = 'shield';
 
   // Register PWA Service Worker
   if ('serviceWorker' in navigator) {
@@ -412,6 +624,50 @@
     currentUser = null;
     document.getElementById('app-screen').classList.add('hidden');
     document.getElementById('login-screen').classList.remove('hidden');
+  }
+
+  function selectMode(mode) {
+    currentSelectedMode = mode;
+    document.getElementById('mode-shield').classList.toggle('active', mode === 'shield');
+    document.getElementById('mode-direct').classList.toggle('active', mode === 'direct');
+  }
+
+  // Pitching Demo Functions
+  function openDemoModal() {
+    resetDemoRating();
+    document.getElementById('demo-modal').classList.remove('hidden');
+  }
+
+  function closeDemoModal() {
+    document.getElementById('demo-modal').classList.add('hidden');
+  }
+
+  function resetDemoRating() {
+    document.getElementById('demo-stage-rating').classList.remove('hidden');
+    document.getElementById('demo-stage-apology').classList.add('hidden');
+    document.getElementById('demo-stage-positive').classList.add('hidden');
+    for (var i = 1; i <= 5; i++) {
+      document.getElementById('dstar-' + i).classList.remove('filled');
+    }
+  }
+
+  function triggerDemoRating(star) {
+    for (var i = 1; i <= 5; i++) {
+      var el = document.getElementById('dstar-' + i);
+      if (i <= star) {
+        el.classList.add('filled');
+      } else {
+        el.classList.remove('filled');
+      }
+    }
+    setTimeout(function() {
+      document.getElementById('demo-stage-rating').classList.add('hidden');
+      if (star <= 3) {
+        document.getElementById('demo-stage-apology').classList.remove('hidden');
+      } else {
+        document.getElementById('demo-stage-positive').classList.remove('hidden');
+      }
+    }, 220);
   }
 
   // Handle Login
@@ -481,17 +737,17 @@
     var grandTotal = sSubtotal + aSubtotal;
     var totalComm = (sQty * sComm) + (aQty * aComm);
 
-    document.getElementById('calc-s-label').textContent = 'Stiker Meja (' + sQty + ' pcs x ' + formatRp(sPrice) + '):';
+    document.getElementById('calc-s-label').textContent = 'Stiker (' + sQty + ' pcs x ' + formatRp(sPrice) + '):';
     document.getElementById('calc-s-val').textContent = formatRp(sSubtotal);
 
-    document.getElementById('calc-a-label').textContent = 'Akrilik Kasir (' + aQty + ' pcs x ' + formatRp(aPrice) + '):';
+    document.getElementById('calc-a-label').textContent = 'Akrilik (' + aQty + ' pcs x ' + formatRp(aPrice) + '):';
     document.getElementById('calc-a-val').textContent = formatRp(aSubtotal);
 
     document.getElementById('calc-bill-total').textContent = formatRp(grandTotal);
     document.getElementById('calc-comm-earned').textContent = 'Estimasi Komisi Sales: ' + formatRp(totalComm);
 
     if (sQty > 0) {
-      document.getElementById('s-hint').textContent = 'Mengaktifkan: S-' + sFrom + ' s/d S-' + sTo + ' (' + sQty + ' meja)';
+      document.getElementById('s-hint').textContent = 'Mengaktifkan: S-' + sFrom + ' s/d S-' + sTo + ' (' + sQty + ' stiker)';
       document.getElementById('s-hint').style.color = '#16a34a';
     } else {
       document.getElementById('s-hint').textContent = 'Akan mengaktifkan S-[dari] sampai S-[sampai]';
@@ -499,7 +755,7 @@
     }
 
     if (aQty > 0) {
-      document.getElementById('a-hint').textContent = 'Mengaktifkan: A-' + aFrom + ' s/d A-' + aTo + ' (' + aQty + ' kasir)';
+      document.getElementById('a-hint').textContent = 'Mengaktifkan: A-' + aFrom + ' s/d A-' + aTo + ' (' + aQty + ' akrilik)';
       document.getElementById('a-hint').style.color = '#16a34a';
     } else {
       document.getElementById('a-hint').textContent = 'Akan mengaktifkan A-[dari] sampai A-[sampai]';
@@ -527,13 +783,13 @@
     var hasCashier = !isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo;
 
     if (!hasTable && !hasCashier) {
-      alertEl.textContent = 'Harap isi minimal rentang stiker meja atau akrilik kasir.';
+      alertEl.textContent = 'Harap isi minimal rentang stiker atau akrilik.';
       alertEl.className = 'alert alert-error';
       return;
     }
 
     btn.disabled = true;
-    btn.textContent = 'Mengaktifkan Stiker di Turso...';
+    btn.textContent = 'Mengaktifkan Titik di Turso...';
 
     try {
       var payload = {
@@ -542,6 +798,7 @@
         merchant_name: merchantName,
         maps_url: mapsUrl,
         owner_whatsapp: ownerWa || null,
+        mode: currentSelectedMode,
         table_start: hasTable ? sFrom : null,
         table_end: hasTable ? sTo : null,
         cashier_start: hasCashier ? aFrom : null,
