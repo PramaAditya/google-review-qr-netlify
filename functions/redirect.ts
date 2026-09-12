@@ -38,8 +38,8 @@ function renderHtmlPage(
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #f8fafc;
-      color: #1e293b;
+      background: #f7f6f2;
+      color: #18181b;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -47,43 +47,49 @@ function renderHtmlPage(
       padding: 1.5rem;
     }
     .card {
-      background: white;
+      background: #ffffff;
       max-width: 420px;
       width: 100%;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08);
+      padding: 2.25rem 2rem;
+      border-radius: 22px;
+      border: 2px solid #18181b;
+      box-shadow: 4px 4px 0px #18181b;
       text-align: center;
     }
     .badge {
       display: inline-block;
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      padding: 0.35rem 0.8rem;
+      padding: 0.35rem 0.85rem;
       border-radius: 9999px;
-      margin-bottom: 1rem;
-      background: ${badgeColor}15;
-      color: ${badgeColor};
-      border: 1px solid ${badgeColor}30;
+      margin-bottom: 1.25rem;
+      background: ${badgeColor}20;
+      color: #18181b;
+      border: 1.5px solid #18181b;
+      box-shadow: 2px 2px 0px #18181b;
     }
     h1 {
-      font-size: 1.4rem;
+      font-size: 1.35rem;
+      font-weight: 800;
       margin-bottom: 0.75rem;
-      color: #0f172a;
+      color: #18181b;
+      letter-spacing: -0.02em;
     }
     p {
-      color: #64748b;
+      color: #52525b;
       font-size: 0.95rem;
-      line-height: 1.5;
+      line-height: 1.6;
       margin-bottom: 1.5rem;
     }
     .footer {
-      font-size: 0.8rem;
-      color: #94a3b8;
-      border-top: 1px solid #f1f5f9;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #71717a;
+      border-top: 1.5px dashed #e4e4e7;
       padding-top: 1rem;
+      margin-top: 0.5rem;
     }
   </style>
 </head>
@@ -125,12 +131,13 @@ function renderShieldPage(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ulas Pengalaman Anda - ${displayTitle}</title>
+  <link rel="preload" as="image" href="/images/apology.jpg">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
+      background: #f7f6f2;
+      color: #18181b;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -138,36 +145,39 @@ function renderShieldPage(
       padding: 1.5rem;
     }
     .card {
-      background: #1e293b;
+      background: #ffffff;
       max-width: 440px;
       width: 100%;
       padding: 2.25rem 2rem;
-      border-radius: 20px;
-      border: 1px solid #334155;
+      border-radius: 24px;
+      border: 2px solid #18181b;
+      box-shadow: 5px 5px 0px #18181b;
       text-align: center;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      position: relative;
     }
     .table-tag {
       display: inline-block;
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      padding: 0.25rem 0.75rem;
+      padding: 0.3rem 0.85rem;
       border-radius: 9999px;
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      margin-bottom: 0.75rem;
+      background: #fef08a;
+      color: #18181b;
+      border: 1.5px solid #18181b;
+      box-shadow: 2px 2px 0px #18181b;
+      margin-bottom: 1rem;
     }
     h1 {
-      font-size: 1.35rem;
-      font-weight: 700;
+      font-size: 1.4rem;
+      font-weight: 800;
       margin-bottom: 0.5rem;
-      color: #ffffff;
+      color: #18181b;
+      letter-spacing: -0.02em;
     }
     .subtitle {
-      color: #94a3b8;
+      color: #52525b;
       font-size: 0.95rem;
       line-height: 1.5;
       margin-bottom: 1.75rem;
@@ -179,8 +189,8 @@ function renderShieldPage(
       margin-bottom: 1.75rem;
     }
     .star-btn {
-      background: #0f172a;
-      border: 1px solid #334155;
+      background: #ffffff;
+      border: 2px solid #18181b;
       border-radius: 14px;
       width: 58px;
       height: 64px;
@@ -189,14 +199,15 @@ function renderShieldPage(
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.15s ease;
+      box-shadow: 3px 3px 0px #18181b;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
       text-decoration: none;
-      color: #fbbf24;
+      color: #f59e0b;
     }
     .star-btn:hover, .star-btn:active {
-      background: #334155;
-      transform: scale(1.08);
-      border-color: #fbbf24;
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #18181b;
+      background: #fef9c3;
     }
     .star-icon {
       font-size: 1.6rem;
@@ -204,47 +215,76 @@ function renderShieldPage(
       margin-bottom: 0.2rem;
     }
     .star-num {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #cbd5e1;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #18181b;
     }
-    /* Negative Empathy View (Initially Hidden) */
+    .helper-text {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #71717a;
+    }
+
+    /* Negative Empathy View with Illustration */
     #negative-view {
       display: none;
-      animation: fadeIn 0.3s ease forwards;
+      animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.96) translateY(6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .apology-avatar {
+      width: 135px;
+      height: 135px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2.5px solid #18181b;
+      box-shadow: 4px 4px 0px #18181b;
+      margin: 0 auto 1.25rem auto;
+      display: block;
+      background: #ffffff;
     }
     .btn-wa {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
       width: 100%;
       background: #22c55e;
-      color: white;
-      font-weight: 600;
+      border: 2px solid #18181b;
+      box-shadow: 3px 3px 0px #18181b;
+      color: #ffffff;
+      font-weight: 700;
       font-size: 0.95rem;
       padding: 0.85rem 1rem;
-      border-radius: 12px;
+      border-radius: 14px;
       text-decoration: none;
-      margin-top: 1rem;
+      margin-top: 1.25rem;
       margin-bottom: 1rem;
-      transition: background 0.15s ease;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
     }
-    .btn-wa:hover {
+    .btn-wa:hover, .btn-wa:active {
       background: #16a34a;
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #18181b;
     }
     .alt-link {
-      color: #64748b;
+      color: #71717a;
       font-size: 0.8rem;
       text-decoration: underline;
       cursor: pointer;
+      transition: color 0.15s ease;
+    }
+    .alt-link:hover {
+      color: #18181b;
     }
     .footer {
       font-size: 0.75rem;
-      color: #64748b;
-      margin-top: 1.5rem;
-      border-top: 1px solid #334155;
+      font-weight: 600;
+      color: #71717a;
+      margin-top: 1.75rem;
+      border-top: 1.5px dashed #e4e4e7;
       padding-top: 1rem;
     }
   </style>
@@ -279,18 +319,18 @@ function renderShieldPage(
         </a>
       </div>
       
-      <p style="font-size: 0.8rem; color: #64748b;">Ketuk bintang untuk membagikan ulasan Anda</p>
+      <p class="helper-text">Ketuk bintang untuk membagikan ulasan Anda</p>
     </div>
 
     <div id="negative-view">
-      <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">&#128172;</div>
+      <img src="/images/apology.jpg" class="apology-avatar" alt="Karakter Kartun Meminta Maaf">
       <h1 style="font-size: 1.25rem;">Mohon Maaf Atas Ketidaknyamanan</h1>
       <p class="subtitle" style="margin-bottom: 1.25rem;">
-        Kenyamanan Anda adalah prioritas kami. Sampaikan masukan Anda langsung kepada Manajer agar dapat kami tangani segera di meja Anda.
+        Kenyamanan Anda adalah prioritas utama kami. Sampaikan masukan Anda langsung kepada Manajer agar dapat kami tangani segera di meja Anda.
       </p>
       
       <a id="wa-action-btn" href="${waUrl}" class="btn-wa">
-        Hubungi Manager via WhatsApp
+        <span>Hubungi Manager via WhatsApp</span>
       </a>
       
       <div>
