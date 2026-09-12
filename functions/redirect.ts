@@ -98,7 +98,7 @@ function renderHtmlPage(
     <div class="badge">${badge}</div>
     <h1>${title}</h1>
     <p>${message}</p>
-    <div class="footer">Google Review QR Service &bull; greview-qr</div>
+    <div class="footer">Google Review QR Service</div>
   </div>
 </body>
 </html>`;

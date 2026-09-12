@@ -1,4 +1,4 @@
-# AGENTS.md — Netlify Redirect & Tracking Engine (`greview-qr`)
+# AGENTS.md — Netlify Redirect & Tracking Engine (`grqrr`)
 
 ## 1. Overview & System Purpose
 
@@ -6,7 +6,7 @@ This repository (`google-review-qr-netlify`) hosts the serverless redirect and t
 
 Physical vinyl stickers with pre-printed unique QR codes are deployed across restaurant tables and cashier counters. Each sticker contains a compact unique URL endpoint:
 ```text
-https://greview-qr.netlify.app/:id  (Legacy backward-compatible: /id/:id)
+https://grqrr.netlify.app/:id  (Legacy backward-compatible: /id/:id)
 ```
 
 ### Core Responsibilities
@@ -179,9 +179,9 @@ const [updateResult, _logResult] = await db.batch([
 ## 5. Deployment & Configuration Details
 
 ### Netlify Site Metadata
-- **Project Name:** `greview-qr`
+- **Project Name:** `grqrr`
 - **Site ID:** `741be2d8-7511-4205-9610-b7588d5afda1`
-- **Production URL:** `https://greview-qr.netlify.app`
+- **Production URL:** `https://grqrr.netlify.app`
 - **Git Remote:** `https://github.com/PramaAditya/google-review-qr-netlify.git`
 
 ### Required Environment Variables
