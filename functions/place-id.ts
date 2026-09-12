@@ -15,6 +15,7 @@ export interface GooglePlaceInfo {
   mapsUrl: string;
   coordinates?: { lat: number; lng: number };
   name?: string;
+  address?: string;
 }
 
 /**
@@ -93,32 +94,57 @@ export async function parseGoogleMapsUrl(inputUrl: string): Promise<GooglePlaceI
     }
   }
 
-  // 4. Regex pattern to extract !1s0x...:0x... from Google Maps URL
-  const featureIdMatch = targetUrl.match(/!1s(0x[0-9a-fA-F]+):(0x[0-9a-fA-F]+)/);
-  if (!featureIdMatch) {
+  // 4. Extract feature ID / cell ID:
+  // Can be !1s0x...:0x... (Desktop) OR ftid=0x...:0x... (Mobile App Share)
+  const featureIdMatch = targetUrl.match(/(?:!1s|[?&]ftid=)(0x[0-9a-fA-F]+):(0x[0-9a-fA-F]+)/);
+  let placeId = "";
+  let cid = "";
+  let hexCellId = "";
+  let hexFeatureId = "";
+
+  if (featureIdMatch) {
+    hexCellId = featureIdMatch[1].toLowerCase();
+    hexFeatureId = featureIdMatch[2].toLowerCase();
+    placeId = encodePlaceId(hexCellId, hexFeatureId);
+    cid = BigInt(hexFeatureId).toString();
+  } else {
     // Check if CID is directly in query params (?cid=...)
     const cidMatch = targetUrl.match(/[?&]cid=([0-9]+)/);
     if (cidMatch) {
+      cid = cidMatch[1];
       const cidBigInt = BigInt(cidMatch[1]);
-      const hexFeatureId = `0x${cidBigInt.toString(16)}`;
-      return {
-        placeId: "",
-        cid: cidMatch[1],
-        hexCellId: "",
-        hexFeatureId,
-        directReviewUrl: `https://maps.google.com/?cid=${cidMatch[1]}`,
-        mapsUrl: `https://maps.google.com/?cid=${cidMatch[1]}`,
-      };
+      hexFeatureId = `0x${cidBigInt.toString(16)}`;
+    } else {
+      throw new Error("Link Google Maps tidak memuat ID lokasi (!1s0x... atau ftid). Pastikan link berasal dari Google Maps toko.");
     }
-    throw new Error("Link Google Maps tidak memuat ID lokasi (!1s0x...:0x...). Pastikan link berasal dari Google Maps toko.");
   }
 
-  const hexCellId = featureIdMatch[1].toLowerCase();
-  const hexFeatureId = featureIdMatch[2].toLowerCase();
-  const placeId = encodePlaceId(hexCellId, hexFeatureId);
-  const cid = BigInt(hexFeatureId).toString();
+  // 5. Extract Business Name & Address
+  let name: string | undefined;
+  let address: string | undefined;
 
-  // Extract Coordinates if present
+  // Case A: From query param q (Mobile share format: q=Name,+Address...)
+  try {
+    const urlObj = new URL(targetUrl);
+    const qParam = urlObj.searchParams.get("q");
+    if (qParam) {
+      const parts = qParam.split(",");
+      name = parts[0].trim();
+      if (parts.length > 1) {
+        address = parts.slice(1).join(",").trim();
+      }
+    }
+  } catch (e) {}
+
+  // Case B: From path /place/Name/@... (Desktop format)
+  if (!name) {
+    const nameMatch = targetUrl.match(/\/place\/([^/@?]+)/);
+    if (nameMatch) {
+      name = decodeURIComponent(nameMatch[1].replace(/\+/g, " "));
+    }
+  }
+
+  // 6. Extract Coordinates if present
   let coordinates: { lat: number; lng: number } | undefined;
   const coordMatch = targetUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (coordMatch) {
@@ -128,21 +154,14 @@ export async function parseGoogleMapsUrl(inputUrl: string): Promise<GooglePlaceI
     };
   }
 
-  // Extract Business Name from URL path if present
-  let name: string | undefined;
-  const nameMatch = targetUrl.match(/\/place\/([^/@?]+)/);
-  if (nameMatch) {
-    name = decodeURIComponent(nameMatch[1].replace(/\+/g, " "));
-  }
-
   return {
     placeId,
     cid,
     hexCellId,
     hexFeatureId,
     name,
-    coordinates,
-    directReviewUrl: `https://search.google.com/local/writereview?placeid=${placeId}`,
+    address,
+    directReviewUrl: placeId ? `https://search.google.com/local/writereview?placeid=${placeId}` : `https://maps.google.com/?cid=${cid}`,
     mapsUrl: `https://maps.google.com/?cid=${cid}`,
   };
 }

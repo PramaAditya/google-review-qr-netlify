@@ -221,6 +221,19 @@ describe("Sales PWA Backend APIs", () => {
     expect(data.data.name).toBe("Lalana Space");
     expect(data.data.directReviewUrl).toContain("placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
   });
+  it("resolves mobile Google Maps app short link (maps.app.goo.gl) and extracts place name", async () => {
+    const shortUrl = "https://maps.app.goo.gl/XwVCbUhgzRmT333aA?g_st=ic";
+    const req = new Request(`https://grqrr.netlify.app/api/sales/resolve-maps?url=${encodeURIComponent(shortUrl)}`);
+    const res = await salesHandler(req, {} as any);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.success).toBe(true);
+    expect(data.data.placeId).toBe("ChIJLfa-odLpaC4ROAxQUcIh5Cg");
+    expect(data.data.name).toBe("Lalana Space");
+    expect(data.data.address).toContain("Cikoneng");
+    expect(data.data.directReviewUrl).toContain("placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
+  });
+
 
   it("returns 422 for invalid Google Maps URL without location ID", async () => {
     const req = new Request("https://grqrr.netlify.app/api/sales/resolve-maps", {

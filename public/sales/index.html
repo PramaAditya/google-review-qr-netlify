@@ -1121,11 +1121,12 @@
       playBeep();
       triggerHaptic();
 
-      badge.innerHTML = '<div>' +
-        '<strong style="color: #15803d;">✓ Terverifikasi</strong>: ' + (data.name ? '<span>' + data.name + '</span> ' : '') +
-        (data.placeId ? '<code style="background:#dcfce7; color:#166534; padding:0.1rem 0.35rem; border-radius:4px; font-size:0.75rem;">' + data.placeId + '</code>' : '') +
+      badge.innerHTML = '<div style="flex: 1; min-width: 0;">' +
+        '<div><strong style="color: #15803d;">✓ Terverifikasi:</strong> <span style="font-weight: 800; color: #18181b;">' + (data.name || 'Lokasi Terdeteksi') + '</span></div>' +
+        (data.address ? '<div style="font-size: 0.72rem; color: #52525b; margin-top: 0.2rem; line-height: 1.35;">' + data.address + '</div>' : '') +
+        (data.placeId ? '<div style="margin-top: 0.3rem;"><code style="background: #dcfce7; color: #166534; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">Place ID: ' + data.placeId + '</code></div>' : '') +
         '</div>' +
-        '<a href="' + data.directReviewUrl + '" target="_blank" rel="noopener" style="color: #15803d; font-weight: 800; text-decoration: underline; flex-shrink: 0;">Uji Buka ↗</a>';
+        '<a href="' + data.directReviewUrl + '" target="_blank" rel="noopener" style="color: #15803d; font-weight: 800; text-decoration: underline; flex-shrink: 0; padding-left: 0.6rem; font-size: 0.8rem;">Uji Buka ↗</a>';
       badge.classList.remove('hidden');
 
     } catch (err) {
