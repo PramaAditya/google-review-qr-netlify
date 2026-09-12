@@ -8,8 +8,8 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
+      background: #f7f6f2;
+      color: #18181b;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -17,69 +17,88 @@
       padding: 1.5rem;
     }
     .card {
-      background: #1e293b;
-      max-width: 480px;
+      background: #ffffff;
+      max-width: 440px;
       width: 100%;
-      padding: 2.5rem;
-      border-radius: 20px;
-      border: 1px solid #334155;
+      padding: 2.5rem 2rem;
+      border-radius: 24px;
+      border: 2px solid #18181b;
+      box-shadow: 5px 5px 0px #18181b;
       text-align: center;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+      position: relative;
     }
-    .status-dot {
+    .status-pill {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      color: #10b981;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      gap: 0.45rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       padding: 0.35rem 0.85rem;
       border-radius: 9999px;
-      margin-bottom: 1.5rem;
+      background: #dcfce7;
+      color: #166534;
+      border: 1.5px solid #18181b;
+      box-shadow: 2px 2px 0px #18181b;
+      margin-bottom: 1.25rem;
     }
     .dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
+      background: #22c55e;
+      border: 1px solid #18181b;
     }
     h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-      color: #ffffff;
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      color: #18181b;
+      letter-spacing: -0.02em;
     }
     p {
-      color: #94a3b8;
+      color: #52525b;
       font-size: 0.95rem;
       line-height: 1.6;
-      margin-bottom: 2rem;
+      margin-bottom: 1.75rem;
     }
     .info-box {
-      background: #0f172a;
-      border-radius: 12px;
-      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 1.1rem;
       font-size: 0.85rem;
-      color: #cbd5e1;
+      color: #334155;
       text-align: left;
-      border: 1px solid #334155;
+      border: 1.5px solid #18181b;
+      box-shadow: 3px 3px 0px #18181b;
+    }
+    .info-box-title {
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 0.35rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
     .info-box code {
-      color: #38bdf8;
-      font-family: monospace;
-    }
-    .footer {
-      font-size: 0.8rem;
-      color: #64748b;
-      margin-top: 1.5rem;
+      display: block;
+      margin-top: 0.4rem;
+      background: #ffffff;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      color: #0284c7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      word-break: break-all;
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="status-dot">
+    <div class="status-pill">
       <span class="dot"></span>
       Service Operational
     </div>
@@ -88,11 +107,8 @@
       Layanan pengalihan pintar (*smart redirection*) dan telemetri untuk stiker QR Google Review meja & kasir.
     </p>
     <div class="info-box">
-      <strong>Format Scan QR:</strong><br>
+      <div class="info-box-title">Format Scan QR:</div>
       <code>https://greview-qr.netlify.app/:id</code>
-    </div>
-    <div class="footer">
-      Powered by Netlify Functions &bull; Turso libSQL
     </div>
   </div>
 </body>
