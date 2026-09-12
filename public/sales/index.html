@@ -1111,9 +1111,27 @@
     return null;
   }
 
+  var isScannerPaused = false;
+  var isStatusChecking = false;
+  var candidateText = null;
+  var candidateHits = 0;
+  var REQUIRED_CANDIDATE_HITS = 2;
+  var nativeBarcodeDetector = null;
+
+  if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+    try {
+      nativeBarcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+    } catch (e) {}
+  }
+
   async function startBulkScanner() {
     document.getElementById('scanner-screen').classList.remove('hidden');
     updateScannerTray();
+
+    isScannerPaused = false;
+    isStatusChecking = false;
+    candidateText = null;
+    candidateHits = 0;
 
     try {
       scannerStream = await navigator.mediaDevices.getUserMedia({
@@ -1139,48 +1157,112 @@
       scannerStream.getTracks().forEach(function(track) { track.stop(); });
       scannerStream = null;
     }
+    isScannerPaused = false;
+    isStatusChecking = false;
+    candidateText = null;
+    candidateHits = 0;
     document.getElementById('scanner-screen').classList.add('hidden');
     document.getElementById('detected-banner').classList.add('hidden');
     currentDetectedId = null;
   }
-
   function finishBulkScanner() {
     stopBulkScanner();
     renderScannedItemsForm();
     calcTotals();
   }
 
-  function scanFrame() {
+  async function scanFrame() {
+    if (!scannerStream) return;
     var video = document.getElementById('scanner-video');
     var canvas = document.getElementById('scanner-canvas');
 
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      var ctx = canvas.getContext('2d', { willReadFrequently: true });
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      var rawQrData = null;
-      var foundCode = null;
+    if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      scannerAnimId = requestAnimationFrame(scanFrame);
+      return;
+    }
 
-      // Try jsQR
-      if (typeof jsQR !== 'undefined') {
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        var qrResult = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: 'dontInvert'
-        });
-        if (qrResult && qrResult.data) {
-          rawQrData = qrResult.data;
-          foundCode = parseScannedQrText(rawQrData);
+    // If paused (e.g. just added an item or checking status), keep loop running but skip decoding
+    if (isScannerPaused || isStatusChecking) {
+      scannerAnimId = requestAnimationFrame(scanFrame);
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    var ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    var rawQrData = null;
+    var foundCode = null;
+
+    // 1. High-Performance Hardware Accelerated BarcodeDetector (Modern Android Chrome)
+    if (nativeBarcodeDetector) {
+      try {
+        var barcodes = await nativeBarcodeDetector.detect(canvas);
+        if (barcodes && barcodes.length > 0) {
+          // When multiple QR codes are in frame, pick the one CLOSEST to the center viewfinder box!
+          var centerX = canvas.width / 2;
+          var centerY = canvas.height / 2;
+          var closest = barcodes[0];
+          var minDistance = Infinity;
+
+          for (var i = 0; i < barcodes.length; i++) {
+            var b = barcodes[i];
+            var box = b.boundingBox;
+            var bx = box.x + box.width / 2;
+            var by = box.y + box.height / 2;
+            var dist = Math.hypot(bx - centerX, by - centerY);
+            if (dist < minDistance) {
+              minDistance = dist;
+              closest = b;
+            }
+          }
+
+          if (closest && closest.rawValue) {
+            rawQrData = closest.rawValue;
+            foundCode = parseScannedQrText(rawQrData);
+          }
         }
+      } catch (e) {}
+    }
+
+    // 2. Fallback to jsQR with SPATIAL RETICLE CROPPING
+    // Cropping to the central ~52% of the frame isolates the reticle and ignores outside stickers
+    if (!rawQrData && typeof jsQR !== 'undefined') {
+      var cropSize = Math.floor(Math.min(canvas.width, canvas.height) * 0.52);
+      var cropX = Math.floor((canvas.width - cropSize) / 2);
+      var cropY = Math.floor((canvas.height - cropSize) / 2);
+
+      var imageData = ctx.getImageData(cropX, cropY, cropSize, cropSize);
+      var qrResult = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert'
+      });
+
+      if (qrResult && qrResult.data) {
+        rawQrData = qrResult.data;
+        foundCode = parseScannedQrText(rawQrData);
+      }
+    }
+
+    // 3. Multi-frame candidate stabilization (eliminates 1-frame jitter and rapid flipping)
+    if (rawQrData) {
+      if (rawQrData === candidateText) {
+        candidateHits++;
+      } else {
+        candidateText = rawQrData;
+        candidateHits = 1;
       }
 
-      if (rawQrData) {
+      if (candidateHits >= REQUIRED_CANDIDATE_HITS) {
         if (foundCode) {
-          handleQrDetected(foundCode);
+          await handleQrDetected(foundCode);
         } else {
           handleInvalidQrDetected(rawQrData);
         }
       }
+    } else {
+      if (candidateHits > 0) candidateHits--;
+      if (candidateHits === 0) candidateText = null;
     }
 
     scannerAnimId = requestAnimationFrame(scanFrame);
@@ -1258,7 +1340,13 @@
     }
 
     // 2. Check if already active in database (prevent overwrite!)
+    isStatusChecking = true;
     var statusInfo = await checkCodeStatus(codeId);
+    isStatusChecking = false;
+
+    // If target changed while awaiting response, abort this stale result
+    if (currentDetectedId !== codeId) return;
+
     if (statusInfo.is_active) {
       banner.style.borderColor = '#f59e0b';
       banner.style.background = 'rgba(245, 158, 11, 0.2)';
@@ -1271,12 +1359,13 @@
       pickBtn.textContent = 'SUDAH TERPAKAI';
 
       var now = Date.now();
-      if (now - lastInvalidAlertTime > 1200) {
+      if (now - lastInvalidAlertTime > 1500) {
         lastInvalidAlertTime = now;
         playErrorTone();
         triggerHaptic();
         triggerScannerFlash('invalid');
       }
+      return;
     }
 
     // 3. Fresh unassigned item -> ready to add
@@ -1288,23 +1377,31 @@
 
     // Auto-add debounce
     var now = Date.now();
-    if (lastAddedId !== codeId || now - lastAddedTime > 1200) {
+    if (lastAddedId !== codeId || now - lastAddedTime > 1500) {
       lastAddedId = codeId;
       lastAddedTime = now;
       addCurrentDetected();
     }
   }
 
-
   function addCurrentDetected() {
     if (!currentDetectedId) return;
     if (!scannedItems.has(currentDetectedId)) {
-      scannedItems.add(currentDetectedId);
+      var addedCode = currentDetectedId;
+      scannedItems.add(addedCode);
       playBeep();
       triggerHaptic();
       triggerScannerFlash('success');
       updateScannerTray();
-      handleQrDetected(currentDetectedId);
+      handleQrDetected(addedCode);
+
+      // Pause scanner briefly (650ms) to ensure calm, smooth addition without flipping
+      isScannerPaused = true;
+      candidateText = null;
+      candidateHits = 0;
+      setTimeout(function() {
+        isScannerPaused = false;
+      }, 650);
     }
   }
 
