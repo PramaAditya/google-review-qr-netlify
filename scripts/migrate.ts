@@ -74,6 +74,10 @@ async function migrate() {
     );`,
   ]);
 
+  // 1.1 Add default_mode to merchants
+  console.log("\n--- Expanding 'merchants' Columns ---");
+  await addColumnIfNotExists("merchants", "default_mode", "TEXT DEFAULT 'direct'");
+
   // 2. Expand qr_links columns for B2B SaaS
   console.log("\n--- Expanding 'qr_links' Columns ---");
   await addColumnIfNotExists("qr_links", "merchant_id", "TEXT");

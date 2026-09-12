@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS qr_links (
     merchant_name TEXT,
     table_no TEXT,
     zone TEXT DEFAULT 'indoor',       -- 'indoor' | 'outdoor' | 'smoking' | 'bar'
-    mode TEXT DEFAULT 'direct',       -- 'direct' | 'shield' | 'loyalty'
+    mode TEXT DEFAULT 'inherit',      -- 'inherit' | 'direct' | 'shield' | 'loyalty'
     target_url TEXT,
     negative_feedback_url TEXT,
     scan_count INTEGER DEFAULT 0,
@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS merchants (
     name TEXT NOT NULL,
     owner_whatsapp TEXT,
     plan TEXT DEFAULT 'free',         -- 'free' | 'starter' | 'pro'
+    default_mode TEXT DEFAULT 'direct', -- 'direct' | 'shield' (store-wide default)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -18,12 +18,13 @@ async function seed() {
   // 1. Seed Merchant Profile
   console.log("\n--- Seeding Merchant ---");
   await db.execute({
-    sql: `INSERT INTO merchants (id, name, owner_whatsapp, plan)
-          VALUES ('merch_lalana_space', 'Lalana Space', '+6281234567890', 'pro')
+    sql: `INSERT INTO merchants (id, name, owner_whatsapp, plan, default_mode)
+          VALUES ('merch_lalana_space', 'Lalana Space', '+6281234567890', 'pro', 'shield')
           ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
             owner_whatsapp = excluded.owner_whatsapp,
-            plan = excluded.plan;`,
+            plan = excluded.plan,
+            default_mode = excluded.default_mode;`,
     args: [],
   });
   console.log("Merchant 'merch_lalana_space' seeded.");
@@ -50,7 +51,7 @@ async function seed() {
       merchant_name: "Lalana Space - Meja 1",
       table_no: "Meja 01",
       zone: "outdoor",
-      mode: "shield",
+      mode: "inherit",
       target_url: lalanaReviewUrl,
       negative_feedback_url: "https://wa.me/6281234567890?text=Halo+Manager+Lalana+Space",
       status: "active",

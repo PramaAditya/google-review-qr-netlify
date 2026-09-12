@@ -442,10 +442,12 @@ export default async (req: Request, context: Context) => {
   try {
     // 1. Fetch link details
     const lookup = await db.execute({
-      sql: `SELECT id, merchant_id, merchant_name, target_url, negative_feedback_url, 
-                   table_no, zone, mode, status, scan_count 
-            FROM qr_links 
-            WHERE id = ? 
+      sql: `SELECT l.id, l.merchant_id, l.merchant_name, l.target_url, l.negative_feedback_url, 
+                   l.table_no, l.zone, l.status, l.scan_count,
+                   COALESCE(NULLIF(l.mode, 'inherit'), m.default_mode, 'direct') AS effective_mode
+            FROM qr_links l
+            LEFT JOIN merchants m ON l.merchant_id = m.id
+            WHERE l.id = ? 
             LIMIT 1;`,
       args: [id],
     });
@@ -463,7 +465,7 @@ export default async (req: Request, context: Context) => {
 
     const row = lookup.rows[0];
     const status = row.status as string;
-    const mode = (row.mode as string) || "direct";
+    const mode = (row.effective_mode as string) || "direct";
     const targetUrl = row.target_url as string;
     const negativeUrl = row.negative_feedback_url as string | null;
     const merchantName = (row.merchant_name as string) || "";

@@ -13,16 +13,19 @@ const db = createClient({ url, authToken });
 async function checkStatus() {
   console.log("=== MERCHANTS PROFILES ===");
   const merchants = await db.execute(`
-    SELECT id, name, owner_whatsapp, plan, created_at 
+    SELECT id, name, owner_whatsapp, plan, default_mode, created_at 
     FROM merchants;
   `);
   console.table(merchants.rows);
 
   console.log("\n=== QR LINKS REGISTRY (MULTI-TABLE READY) ===");
   const links = await db.execute(`
-    SELECT id, merchant_id, table_no, zone, mode, status, scan_count, last_scanned_at 
-    FROM qr_links 
-    ORDER BY created_at ASC;
+    SELECT l.id, l.merchant_id, l.table_no, l.zone, l.mode, 
+           COALESCE(NULLIF(l.mode, 'inherit'), m.default_mode, 'direct') as effective_mode,
+           l.status, l.scan_count, l.last_scanned_at 
+    FROM qr_links l
+    LEFT JOIN merchants m ON l.merchant_id = m.id
+    ORDER BY l.created_at ASC;
   `);
   console.table(links.rows);
 
