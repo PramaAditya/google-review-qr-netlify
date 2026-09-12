@@ -190,6 +190,18 @@
       opacity: 0.8;
       cursor: wait;
     }
+    .btn-verify-icon:disabled {
+      background: #f4f4f5 !important;
+      border-color: #d4d4d8 !important;
+      box-shadow: none !important;
+      transform: none !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      opacity: 0.45 !important;
+    }
+    .btn-verify-icon:disabled svg {
+      stroke: #a1a1aa !important;
+    }
     .btn-verify-icon svg {
       width: 22px;
       height: 22px;
@@ -279,11 +291,22 @@
       transform: translate(2px, 2px);
       box-shadow: 1px 1px 0px #18181b;
     }
-    .btn-primary:disabled {
-      background: #a1a1aa;
-      cursor: not-allowed;
-      box-shadow: none;
-      transform: none;
+    /* Universal Disabled Button State (Neo-brutalist) */
+    button:disabled,
+    input:disabled,
+    select:disabled,
+    .btn-primary:disabled,
+    .btn-camera-scan:disabled,
+    .btn-demo-pitch:disabled,
+    .btn-logout:disabled {
+      background: #e4e4e7 !important;
+      color: #a1a1aa !important;
+      border-color: #d4d4d8 !important;
+      box-shadow: none !important;
+      transform: none !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      opacity: 0.65 !important;
     }
 
     /* Scanned Items Pills Tray */
@@ -302,17 +325,19 @@
     .chip {
       background: #ffffff;
       border: 1.5px solid #18181b;
-      border-radius: 9999px;
-      padding: 0.25rem 0.6rem;
+      border-radius: 8px;
+      padding: 0.25rem 0.55rem;
       font-size: 0.75rem;
       font-weight: 700;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      box-shadow: 1px 1px 0px #18181b;
+      box-shadow: none;
     }
     .chip.acrylic {
-      background: #fef08a;
+      background: #fef9c3;
+      border-color: #854d0e;
+      color: #854d0e;
     }
     .chip-del {
       color: #ef4444;
@@ -454,13 +479,27 @@
       height: 100%;
       object-fit: cover;
     }
-    .viewfinder-flash {
-      position: absolute;
-      inset: 0;
+    .scanner-count-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e4e4e7;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.65rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
       pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.15s ease-out;
-      z-index: 4;
+      user-select: none;
+    }
+    .scanner-count-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      display: inline-block;
+      box-shadow: 0 0 6px #22c55e;
     }
     .viewfinder-flash.flash-success {
       background: rgba(34, 197, 94, 0.42); /* emerald green overlay */
@@ -549,6 +588,19 @@
     .btn-pick:active {
       transform: scale(0.95);
     }
+    .btn-pick:disabled {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: #a1a1aa !important;
+      border: 1px solid #3f3f46 !important;
+      border-radius: 8px !important;
+      font-size: 0.75rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.04em !important;
+      cursor: default !important;
+      pointer-events: none !important;
+      opacity: 0.7 !important;
+      transform: none !important;
+    }
     .btn-finish-scan {
       width: 100%;
       background: #38bdf8;
@@ -559,9 +611,19 @@
       font-size: 1rem;
       font-weight: 900;
       cursor: pointer;
+      transition: background 0.15s ease, opacity 0.15s ease;
     }
     .btn-finish-scan:active {
       transform: scale(0.98);
+    }
+    .btn-finish-scan:disabled {
+      background: #27272a !important;
+      color: #71717a !important;
+      border: 1.5px solid #3f3f46 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      opacity: 0.55 !important;
+      transform: none !important;
     }
 
     /* Modal Pitching Demo */
@@ -713,7 +775,7 @@
           <label for="act-maps">Link Google Maps Toko *</label>
           <div class="input-with-action">
             <input type="url" id="act-maps" placeholder="https://maps.app.goo.gl/... atau link Maps" required oninput="onMapsInputChanged()">
-            <button type="button" id="btn-verify-maps" class="btn-verify-icon" onclick="verifyMapsUrl()" title="Verifikasi Link Google Maps & Ambil Nama Toko">
+            <button type="button" id="btn-verify-maps" class="btn-verify-icon" onclick="verifyMapsUrl()" title="Verifikasi Link Google Maps & Ambil Nama Toko" disabled>
               <span id="verify-icon-inner">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
@@ -812,8 +874,8 @@
           </div>
         </div>
 
-        <button type="submit" id="btn-activate-submit" class="btn-primary">
-          Aktifkan Sekarang
+        <button type="submit" id="btn-activate-submit" class="btn-primary" disabled>
+          Pindai Minimal 1 Item Dahulu
         </button>
       </form>
     </div>
@@ -825,7 +887,10 @@
     <div class="scanner-header">
       <button type="button" class="btn-back-scanner" onclick="stopBulkScanner()">← Batal</button>
       <div style="font-size: 0.9rem; font-weight: 800;">Pindai Stiker / Akrilik</div>
-      <div class="scanner-count-badge" id="scanner-badge-count">0 Item</div>
+      <div class="scanner-count-badge">
+        <span class="scanner-count-dot"></span>
+        <span id="scanner-badge-count">0 Item Terpindai</span>
+      </div>
     </div>
 
     <div class="viewfinder-container">
@@ -849,7 +914,7 @@
       <!-- Scanned Tray inside scanner -->
       <div id="scanner-tray" style="display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.75rem; margin-bottom: 0.75rem;"></div>
 
-      <button type="button" class="btn-finish-scan" onclick="finishBulkScanner()">
+      <button type="button" class="btn-finish-scan" onclick="finishBulkScanner()" disabled>
         Selesai Scan (<span id="btn-finish-count">0</span> Item) >
       </button>
     </div>
@@ -1065,10 +1130,11 @@
     var btn = document.getElementById('btn-verify-maps');
     var iconInner = document.getElementById('verify-icon-inner');
     if (badge) badge.classList.add('hidden');
+    var hasValue = input && input.value && input.value.trim().length > 0;
     if (btn) {
       btn.classList.remove('verified', 'loading');
-      btn.style.background = '#fef08a';
-      btn.disabled = false;
+      btn.style.background = hasValue ? '#fef08a' : '';
+      btn.disabled = !hasValue;
     }
     if (iconInner) {
       iconInner.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>';
@@ -1592,16 +1658,19 @@
 
   function updateScannerTray() {
     var count = scannedItems.size;
-    document.getElementById('scanner-badge-count').textContent = count + ' Item';
+    var badgeEl = document.getElementById('scanner-badge-count');
+    if (badgeEl) badgeEl.textContent = count + ' Item Terpindai';
     document.getElementById('btn-finish-count').textContent = count;
+    var finishBtn = document.querySelector('.btn-finish-scan');
+    if (finishBtn) finishBtn.disabled = (count === 0);
 
     var tray = document.getElementById('scanner-tray');
     tray.innerHTML = '';
     scannedItems.forEach(function(item) {
       var isAcrylic = item.startsWith('A-');
       var chip = document.createElement('div');
-      chip.style.cssText = 'background:' + (isAcrylic ? '#fef08a' : '#27272a') + '; color:' + (isAcrylic ? '#09090b' : '#ffffff') + '; border:1px solid #3f3f46; border-radius:9999px; padding:0.3rem 0.65rem; font-size:0.75rem; font-weight:800; display:flex; align-items:center; gap:0.4rem; white-space:nowrap;';
-      chip.innerHTML = item + ' <span onclick="removeScannedItem(\'' + item + '\')" style="color:#ef4444; cursor:pointer; font-size:0.9rem;">&times;</span>';
+      chip.style.cssText = 'background: rgba(255, 255, 255, 0.08); color: ' + (isAcrylic ? '#fde047' : '#e4e4e7') + '; border: 1px solid ' + (isAcrylic ? '#ca8a04' : '#3f3f46') + '; border-radius: 8px; padding: 0.25rem 0.6rem; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; user-select: none;';
+      chip.innerHTML = (isAcrylic ? '🏷️ ' : '📌 ') + item + ' <span onclick="removeScannedItem(\'' + item + '\')" style="color:#ef4444; cursor:pointer; font-size:0.95rem; font-weight:900; margin-left:0.15rem; padding:0 0.15rem;" title="Hapus">&times;</span>';
       tray.appendChild(chip);
     });
   }
@@ -1659,6 +1728,16 @@
 
     document.getElementById('calc-bill-total').textContent = formatRp(grandTotal);
     document.getElementById('calc-comm-earned').textContent = 'Estimasi Komisi Sales: ' + formatRp(totalComm);
+    var actBtn = document.getElementById('btn-activate-submit');
+    if (actBtn) {
+      if (scannedItems.size === 0) {
+        actBtn.disabled = true;
+        actBtn.textContent = 'Pindai Minimal 1 Item Dahulu';
+      } else {
+        actBtn.disabled = false;
+        actBtn.textContent = 'Aktifkan Sekarang (' + scannedItems.size + ' Titik)';
+      }
+    }
   }
 
   // Handle Activation Submit

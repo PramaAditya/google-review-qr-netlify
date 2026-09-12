@@ -232,7 +232,7 @@ describe("Sales PWA Backend APIs", () => {
     expect(data.data.name).toBe("Lalana Space");
     expect(data.data.address).toContain("Cikoneng");
     expect(data.data.directReviewUrl).toContain("placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
-  });
+  }, 15000);
 
 
   it("returns 422 for invalid Google Maps URL without location ID", async () => {
