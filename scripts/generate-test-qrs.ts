@@ -46,10 +46,10 @@ const testCases: QrTestCase[] = [
     expected: "Terdeteksi sebagai: Stiker S-105 (vinyl_table)",
   },
   {
-    filename: "valid-raw-S-88.png",
+    filename: "valid-S-88.png",
     type: "valid_table",
-    label: "Stiker Meja S-88 (Plain Code)",
-    payload: "S-88",
+    label: "Stiker Meja S-88",
+    payload: "https://grqrr.netlify.app/S-88",
     expected: "Terdeteksi sebagai: Stiker S-88 (vinyl_table)",
   },
 
@@ -69,10 +69,10 @@ const testCases: QrTestCase[] = [
     expected: "Terdeteksi sebagai: Akrilik A-12 (acrylic_cashier)",
   },
   {
-    filename: "valid-raw-A-5.png",
+    filename: "valid-A-5.png",
     type: "valid_cashier",
-    label: "Akrilik Kasir A-5 (Plain Code)",
-    payload: "A-5",
+    label: "Akrilik Kasir A-5",
+    payload: "https://grqrr.netlify.app/A-5",
     expected: "Terdeteksi sebagai: Akrilik A-5 (acrylic_cashier)",
   },
 
@@ -112,104 +112,141 @@ async function generateQrs() {
 
   for (const tc of testCases) {
     const filePath = path.join(targetDir, tc.filename);
-    await QRCode.toFile(filePath, tc.payload, {
-      width: 320,
-      margin: 2,
-      color: {
-        dark: tc.type === "invalid" ? "#991b1b" : "#18181b",
-        light: "#ffffff",
-      },
-      errorCorrectionLevel: "M",
-    });
-    console.log(`Generated: ${tc.filename} -> Payload: "${tc.payload}"`);
+    if (!fs.existsSync(filePath)) {
+      await QRCode.toFile(filePath, tc.payload, {
+        width: 320,
+        margin: 2,
+        color: {
+          dark: tc.type === "invalid" ? "#991b1b" : "#18181b",
+          light: "#ffffff",
+        },
+        errorCorrectionLevel: "M",
+      });
+      console.log(`Generated: ${tc.filename} -> Payload: "${tc.payload}"`);
+    } else {
+      console.log(`Exists: ${tc.filename}`);
+    }
   }
 
   // Generate interactive HTML preview sheet
+  // Interleave and randomize test items to simulate a messy sales table
+  const shuffledCases = [...testCases].sort(() => Math.random() - 0.5);
+
   const htmlContent = `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lembar Uji QR Code - GRQRR</title>
+  <title>Simulasi Meja Lapangan - Pindai Stiker Berantakan</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f7f6f2;
+      background: #e5e2da;
       color: #18181b;
-      padding: 2rem 1.5rem;
+      min-height: 100vh;
+      padding: 1.5rem 2rem 4rem 2rem;
+      width: 100%;
     }
-    .header {
-      max-width: 960px;
-      margin: 0 auto 2rem auto;
-      text-align: center;
+    .top-bar {
+      width: 100%;
+      background: #ffffff;
+      border: 2px solid #18181b;
+      border-radius: 20px;
+      box-shadow: 4px 4px 0px #18181b;
+      padding: 1.25rem 1.75rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
     }
-    h1 {
-      font-size: 1.8rem;
+    .top-info h1 {
+      font-size: 1.4rem;
       font-weight: 900;
-      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
     }
-    p {
+    .top-info p {
+      font-size: 0.85rem;
       color: #52525b;
-      font-size: 0.95rem;
-      line-height: 1.5;
+      line-height: 1.4;
     }
-    .instructions {
+    .btn-shuffle {
       background: #fef08a;
       border: 2px solid #18181b;
-      border-radius: 14px;
       box-shadow: 3px 3px 0px #18181b;
-      padding: 1rem 1.25rem;
-      max-width: 960px;
-      margin: 0 auto 2.5rem auto;
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-    .section-title {
-      font-size: 1.25rem;
+      border-radius: 12px;
+      padding: 0.65rem 1.15rem;
+      font-size: 0.85rem;
       font-weight: 800;
-      margin: 2rem 0 1rem 0;
-      display: flex;
+      cursor: pointer;
+      display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
-    .grid {
+    .btn-shuffle:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #18181b;
+    }
+    .table-surface {
+      width: 100%;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1.25rem;
-      max-width: 960px;
-      margin: 0 auto;
+      grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+      gap: 2rem 1.5rem;
+      align-items: center;
+      justify-content: center;
     }
-    .card {
+    .obj-card {
       background: #ffffff;
       border: 2px solid #18181b;
       border-radius: 18px;
-      padding: 1.25rem;
-      box-shadow: 4px 4px 0px #18181b;
+      padding: 1rem;
+      box-shadow: 6px 8px 18px rgba(0, 0, 0, 0.12);
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+      position: relative;
+      cursor: pointer;
     }
-    .card.invalid {
-      border-color: #991b1b;
-      box-shadow: 4px 4px 0px #991b1b;
+    .obj-card:hover {
+      transform: scale(1.06) rotate(0deg) !important;
+      box-shadow: 10px 14px 28px rgba(0, 0, 0, 0.25);
+      z-index: 50;
+    }
+    .obj-card.sticker {
+      background: #ffffff;
+      border: 2px solid #18181b;
+    }
+    .obj-card.acrylic {
+      background: #fefce8;
+      border: 3px solid #18181b;
+      box-shadow: 8px 10px 24px rgba(0, 0, 0, 0.18);
+    }
+    .obj-card.invalid {
+      background: #fef2f2;
+      border: 2px dashed #dc2626;
+      opacity: 0.9;
     }
     .badge {
-      display: inline-block;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 800;
       text-transform: uppercase;
-      padding: 0.25rem 0.6rem;
+      padding: 0.2rem 0.6rem;
       border-radius: 9999px;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.65rem;
+      display: inline-block;
     }
-    .badge.table {
+    .badge.sticker {
       background: #e0f2fe;
       color: #0369a1;
       border: 1.5px solid #0284c7;
     }
-    .badge.cashier {
+    .badge.acrylic {
       background: #fef08a;
       color: #854d0e;
       border: 1.5px solid #ca8a04;
@@ -220,119 +257,88 @@ async function generateQrs() {
       border: 1.5px solid #dc2626;
     }
     .qr-img {
-      width: 190px;
-      height: 190px;
+      width: 175px;
+      height: 175px;
       border: 1.5px solid #18181b;
       border-radius: 12px;
-      margin-bottom: 0.75rem;
       background: #ffffff;
+      margin-bottom: 0.5rem;
+      display: block;
     }
-    .card.invalid .qr-img {
+    .obj-card.invalid .qr-img {
       border-color: #dc2626;
     }
-    .title {
-      font-size: 0.9rem;
-      font-weight: 800;
-      margin-bottom: 0.35rem;
+    .obj-title {
+      font-size: 0.85rem;
+      font-weight: 900;
+      color: #18181b;
+      margin-bottom: 0.2rem;
     }
-    .payload {
-      font-family: monospace;
-      font-size: 0.75rem;
-      color: #4b5563;
-      background: #f3f4f6;
-      padding: 0.3rem 0.5rem;
+    .obj-payload {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.7rem;
+      color: #52525b;
+      background: #f4f4f5;
+      padding: 0.2rem 0.45rem;
       border-radius: 6px;
       word-break: break-all;
-      margin-bottom: 0.5rem;
     }
-    .expected {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #166534;
-    }
-    .card.invalid .expected {
-      color: #991b1b;
+    .obj-card.invalid .obj-payload {
+      color: #dc2626;
+      background: #fee2e2;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>Lembar Pengujian QR Code (GRQRR)</h1>
-    <p>Buka halaman ini di layar laptop/komputer, lalu buka <strong>grqrr.netlify.app/sales</strong> di ponsel Anda dan arahkan kamera ke QR di bawah ini.</p>
+  <div class="top-bar">
+    <div class="top-info">
+      <h1>Simulasi Meja: Stiker & Akrilik Lepas Tercecer</h1>
+      <p>
+        Buka <strong>https://grqrr.netlify.app/sales</strong> di HP Anda, ketuk <strong>"Pindai Kamera Stiker Lepas"</strong>, lalu sapukan kamera melintasi layar monitor untuk menguji deteksi cepat berturut-turut.
+      </p>
+    </div>
+    <button type="button" class="btn-shuffle" onclick="shufflePositions()">
+      <span>Acak Posisi Meja (Shuffle)</span>
+    </button>
   </div>
 
-  <div class="instructions">
-    Cara Pengujian Live Scanner:
-    <ol style="margin-left: 1.25rem; margin-top: 0.35rem; line-height: 1.6;">
-      <li>Buka PWA Sales di HP Anda: <strong>https://grqrr.netlify.app/sales</strong> (Login: 081234567890 / PIN: 1234).</li>
-      <li>Ketuk tombol biru: <strong>"Pindai Kamera Stiker Lepas"</strong>.</li>
-      <li>Arahkan kamera HP ke QR Code <strong>VALID</strong> di bawah: HP akan bergetar dan item langsung masuk ke tray.</li>
-      <li>Coba arahkan kamera ke QR Code <strong>INVALID</strong>: Sistem akan mengabaikannya secara cerdas tanpa error.</li>
-    </ol>
+  <div class="table-surface" id="table-surface">
+    ${shuffledCases
+      .map((t, idx) => {
+        const cardClass = t.type === "valid_table" ? "sticker" : t.type === "valid_cashier" ? "acrylic" : "invalid";
+        const badgeClass = t.type === "valid_table" ? "sticker" : t.type === "valid_cashier" ? "acrylic" : "invalid";
+        const badgeText = t.type === "valid_table" ? "Stiker Meja" : t.type === "valid_cashier" ? "Akrilik Kasir" : "Abaikan";
+        const tilt = ((idx * 3.7) % 10 - 5).toFixed(1);
+        return `
+      <div class="obj-card ${cardClass}" style="transform: rotate(${tilt}deg);">
+        <span class="badge ${badgeClass}">${badgeText}</span>
+        <img src="${t.filename}" class="qr-img" alt="${t.label}">
+        <div class="obj-title">${t.label}</div>
+        <div class="obj-payload">${t.payload}</div>
+      </div>
+    `;
+      })
+      .join("")}
   </div>
 
-  <div style="max-width: 960px; margin: 0 auto;">
-    <div class="section-title">
-      <span>1. QR Code Valid - Stiker Meja (S-[N])</span>
-    </div>
-    <div class="grid">
-      ${testCases
-        .filter((t) => t.type === "valid_table")
-        .map(
-          (t) => `
-        <div class="card">
-          <div class="badge table">Stiker Meja</div>
-          <img src="${t.filename}" class="qr-img" alt="${t.label}">
-          <div class="title">${t.label}</div>
-          <div class="payload">${t.payload}</div>
-          <div class="expected">${t.expected}</div>
-        </div>
-      `
-        )
-        .join("")}
-    </div>
-
-    <div class="section-title">
-      <span>2. QR Code Valid - Akrilik Kasir (A-[N])</span>
-    </div>
-    <div class="grid">
-      ${testCases
-        .filter((t) => t.type === "valid_cashier")
-        .map(
-          (t) => `
-        <div class="card">
-          <div class="badge cashier">Akrilik Kasir</div>
-          <img src="${t.filename}" class="qr-img" alt="${t.label}">
-          <div class="title">${t.label}</div>
-          <div class="payload">${t.payload}</div>
-          <div class="expected">${t.expected}</div>
-        </div>
-      `
-        )
-        .join("")}
-    </div>
-
-    <div class="section-title">
-      <span>3. QR Code Tidak Valid (Negative / Robustness Test)</span>
-    </div>
-    <div class="grid">
-      ${testCases
-        .filter((t) => t.type === "invalid")
-        .map(
-          (t) => `
-        <div class="card invalid">
-          <div class="badge invalid">Tidak Valid / Abaikan</div>
-          <img src="${t.filename}" class="qr-img" alt="${t.label}">
-          <div class="title">${t.label}</div>
-          <div class="payload">${t.payload}</div>
-          <div class="expected">${t.expected}</div>
-        </div>
-      `
-        )
-        .join("")}
-    </div>
-  </div>
+  <script>
+    function shufflePositions() {
+      var container = document.getElementById('table-surface');
+      var cards = Array.from(container.children);
+      for (var i = cards.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = cards[i];
+        cards[i] = cards[j];
+        cards[j] = temp;
+      }
+      cards.forEach(function(card) {
+        var angle = (Math.random() * 10 - 5).toFixed(1);
+        card.style.transform = 'rotate(' + angle + 'deg)';
+        container.appendChild(card);
+      });
+    }
+  </script>
 
 </body>
 </html>`;

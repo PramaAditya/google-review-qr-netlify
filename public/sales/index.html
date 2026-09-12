@@ -614,10 +614,6 @@
         <span>Buka Simulasi Demo Shield (Tunjukkan ke Klien)</span>
       </button>
 
-      <!-- Bulk Camera Scanner Trigger -->
-      <button type="button" class="btn-camera-scan" onclick="startBulkScanner()">
-        <span>Pindai Kamera Stiker Lepas (Quick Bulk Scan)</span>
-      </button>
     </div>
 
     <!-- Activation Form Card -->
@@ -677,40 +673,21 @@
           <input type="tel" id="act-business-wa" placeholder="08xxxxxxxxxx (Untuk laporan mingguan & tagihan)">
         </div>
 
-        <!-- Scanned Items Tray (populated by Camera Scanner) -->
-        <div id="scanned-items-section" class="form-group hidden" style="border-top: 1.5px dashed #e4e4e7; padding-top: 1rem; margin-top: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-            <label style="margin-bottom: 0;">Item Hasil Pindai Kamera (<span id="tray-count">0</span>)</label>
-            <button type="button" style="background: none; border: none; font-size: 0.75rem; color: #ef4444; font-weight: 700; cursor: pointer;" onclick="clearScannedItems()">Hapus Semua</button>
-          </div>
-          <div class="chips-tray" id="chips-tray"></div>
-        </div>
+        <!-- Pindai Stiker & Akrilik (Kamera Bulk Scanner) -->
+        <div class="form-group" style="border-top: 1.5px dashed #e4e4e7; padding-top: 1.25rem; margin-top: 1.25rem;">
+          <label>Item Stiker & Akrilik yang Dijual *</label>
+          
+          <button type="button" class="btn-camera-scan" onclick="startBulkScanner()" style="margin-bottom: 0.75rem; padding: 0.95rem 1rem; font-size: 0.95rem;">
+            <span>📷 Buka Kamera untuk Pindai Stiker & Akrilik</span>
+          </button>
 
-        <!-- Range Inputs (Alternative Manual Input) -->
-        <div id="manual-range-section">
-          <!-- Range Stiker (S-[N]) -->
-          <div class="form-group" style="border-top: 1.5px dashed #e4e4e7; padding-top: 1rem; margin-top: 1rem;">
-            <label>Rentang Stiker (S-[N])</label>
-            <div class="range-row">
-              <input type="number" id="s-from" placeholder="Dari (No)" min="1" oninput="calcTotals()">
-              <span class="range-sep">s/d</span>
-              <input type="number" id="s-to" placeholder="Sampai (No)" min="1" oninput="calcTotals()">
+          <div id="scanned-items-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <span style="font-size: 0.8rem; font-weight: 700; color: #3f3f46;">Item Terpindai: <span id="tray-count" style="color: #0284c7; font-weight: 900;">0</span> item</span>
+              <button type="button" id="btn-clear-tray" style="display: none; background: none; border: none; font-size: 0.75rem; color: #ef4444; font-weight: 700; cursor: pointer;" onclick="clearScannedItems()">Hapus Semua</button>
             </div>
-            <div id="s-hint" style="font-size: 0.75rem; color: #71717a; margin-top: 0.35rem;">
-              Akan mengaktifkan S-[dari] sampai S-[sampai]
-            </div>
-          </div>
-
-          <!-- Range Akrilik (A-[N]) -->
-          <div class="form-group">
-            <label>Rentang Akrilik (A-[N])</label>
-            <div class="range-row">
-              <input type="number" id="a-from" placeholder="Dari (No)" min="1" oninput="calcTotals()">
-              <span class="range-sep">s/d</span>
-              <input type="number" id="a-to" placeholder="Sampai (No)" min="1" oninput="calcTotals()">
-            </div>
-            <div id="a-hint" style="font-size: 0.75rem; color: #71717a; margin-top: 0.35rem;">
-              Akan mengaktifkan A-[dari] sampai A-[sampai]
+            <div class="chips-tray" id="chips-tray">
+              <div id="empty-tray-msg" style="font-size: 0.8rem; color: #71717a; padding: 0.35rem;">Belum ada item dipindai. Ketuk tombol biru di atas untuk menyalakan kamera.</div>
             </div>
           </div>
         </div>
@@ -1209,16 +1186,16 @@
   }
 
   function renderScannedItemsForm() {
-    var section = document.getElementById('scanned-items-section');
     var tray = document.getElementById('chips-tray');
     var countEl = document.getElementById('tray-count');
+    var clearBtn = document.getElementById('btn-clear-tray');
     var count = scannedItems.size;
 
     countEl.textContent = count;
     tray.innerHTML = '';
 
     if (count > 0) {
-      section.classList.remove('hidden');
+      if (clearBtn) clearBtn.style.display = 'inline-block';
       scannedItems.forEach(function(item) {
         var isAcrylic = item.startsWith('A-');
         var chip = document.createElement('div');
@@ -1227,7 +1204,8 @@
         tray.appendChild(chip);
       });
     } else {
-      section.classList.add('hidden');
+      if (clearBtn) clearBtn.style.display = 'none';
+      tray.innerHTML = '<div id="empty-tray-msg" style="font-size: 0.8rem; color: #71717a; padding: 0.35rem;">Belum ada item dipindai. Ketuk tombol biru di atas untuk menyalakan kamera.</div>';
     }
   }
 
@@ -1235,15 +1213,6 @@
   // CALCULATOR & FORM LOGIC
   // ==========================================
   function calcTotals() {
-    var sFrom = parseInt(document.getElementById('s-from').value, 10);
-    var sTo = parseInt(document.getElementById('s-to').value, 10);
-    var aFrom = parseInt(document.getElementById('a-from').value, 10);
-    var aTo = parseInt(document.getElementById('a-to').value, 10);
-
-    var rangeSQty = (!isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo) ? (sTo - sFrom + 1) : 0;
-    var rangeAQty = (!isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo) ? (aTo - aFrom + 1) : 0;
-
-    // Count items from camera bulk scan
     var scanSQty = 0;
     var scanAQty = 0;
     scannedItems.forEach(function(id) {
@@ -1251,43 +1220,24 @@
       else scanSQty++;
     });
 
-    var totalSQty = rangeSQty + scanSQty;
-    var totalAQty = rangeAQty + scanAQty;
-
     var sPrice = currentPricing.price_vinyl_table || 10000;
     var aPrice = currentPricing.price_acrylic_cashier || 25000;
     var sComm = currentUser ? (currentUser.commission_table || 3000) : 3000;
     var aComm = currentUser ? (currentUser.commission_cashier || 7000) : 7000;
 
-    var sSubtotal = totalSQty * sPrice;
-    var aSubtotal = totalAQty * aPrice;
+    var sSubtotal = scanSQty * sPrice;
+    var aSubtotal = scanAQty * aPrice;
     var grandTotal = sSubtotal + aSubtotal;
-    var totalComm = (totalSQty * sComm) + (totalAQty * aComm);
+    var totalComm = (scanSQty * sComm) + (scanAQty * aComm);
 
-    document.getElementById('calc-s-label').textContent = 'Stiker (' + totalSQty + ' pcs x ' + formatRp(sPrice) + '):';
+    document.getElementById('calc-s-label').textContent = 'Stiker (' + scanSQty + ' pcs x ' + formatRp(sPrice) + '):';
     document.getElementById('calc-s-val').textContent = formatRp(sSubtotal);
 
-    document.getElementById('calc-a-label').textContent = 'Akrilik (' + totalAQty + ' pcs x ' + formatRp(aPrice) + '):';
+    document.getElementById('calc-a-label').textContent = 'Akrilik (' + scanAQty + ' pcs x ' + formatRp(aPrice) + '):';
     document.getElementById('calc-a-val').textContent = formatRp(aSubtotal);
 
     document.getElementById('calc-bill-total').textContent = formatRp(grandTotal);
     document.getElementById('calc-comm-earned').textContent = 'Estimasi Komisi Sales: ' + formatRp(totalComm);
-
-    if (rangeSQty > 0) {
-      document.getElementById('s-hint').textContent = 'Mengaktifkan: S-' + sFrom + ' s/d S-' + sTo + ' (' + rangeSQty + ' stiker)';
-      document.getElementById('s-hint').style.color = '#16a34a';
-    } else {
-      document.getElementById('s-hint').textContent = 'Akan mengaktifkan S-[dari] sampai S-[sampai]';
-      document.getElementById('s-hint').style.color = '#71717a';
-    }
-
-    if (rangeAQty > 0) {
-      document.getElementById('a-hint').textContent = 'Mengaktifkan: A-' + aFrom + ' s/d A-' + aTo + ' (' + rangeAQty + ' akrilik)';
-      document.getElementById('a-hint').style.color = '#16a34a';
-    } else {
-      document.getElementById('a-hint').textContent = 'Akan mengaktifkan A-[dari] sampai A-[sampai]';
-      document.getElementById('a-hint').style.color = '#71717a';
-    }
   }
 
   // Handle Activation Submit
@@ -1308,16 +1258,8 @@
       return;
     }
 
-    var sFrom = parseInt(document.getElementById('s-from').value, 10);
-    var sTo = parseInt(document.getElementById('s-to').value, 10);
-    var aFrom = parseInt(document.getElementById('a-from').value, 10);
-    var aTo = parseInt(document.getElementById('a-to').value, 10);
-
-    var hasRange = (!isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo) || (!isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo);
-    var hasScanned = scannedItems.size > 0;
-
-    if (!hasRange && !hasScanned) {
-      alertEl.textContent = 'Harap isi rentang nomor atau scan stiker/akrilik terlebih dahulu.';
+    if (scannedItems.size === 0) {
+      alertEl.textContent = 'Harap pindai minimal satu stiker atau akrilik menggunakan kamera terlebih dahulu.';
       alertEl.className = 'alert alert-error';
       return;
     }
@@ -1334,11 +1276,7 @@
         complaint_whatsapp: complaintWa || null,
         business_whatsapp: businessWa || null,
         mode: currentSelectedMode,
-        items: Array.from(scannedItems),
-        table_start: (!isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo) ? sFrom : null,
-        table_end: (!isNaN(sFrom) && !isNaN(sTo) && sFrom <= sTo) ? sTo : null,
-        cashier_start: (!isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo) ? aFrom : null,
-        cashier_end: (!isNaN(aFrom) && !isNaN(aTo) && aFrom <= aTo) ? aTo : null
+        items: Array.from(scannedItems)
       };
 
       var res = await fetch('/api/sales/activate', {
@@ -1367,10 +1305,7 @@
           showDashboard();
         }
 
-        // Reset form inputs & scanned items
-        document.getElementById('act-merchant').value = '';
-        document.getElementById('act-maps').value = '';
-        document.getElementById('act-complaint-wa').value = '';
+        clearScannedItems();
         document.getElementById('act-business-wa').value = '';
         document.getElementById('same-wa-checkbox').checked = true;
         toggleSameWa();
