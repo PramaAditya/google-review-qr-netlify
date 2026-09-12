@@ -88,13 +88,17 @@ async function seed() {
 
   // 2. Seed Merchant Profile (attributed to Budi Santoso)
   console.log("\n--- Seeding Merchant ---");
+  await db.execute("DELETE FROM merchants WHERE id != 'merch_lalana_space';");
   const budiPhone = standardizePhone("+62 812-3456-7890");
   await db.execute({
-    sql: `INSERT INTO merchants (id, name, owner_whatsapp, plan, default_mode, sales_rep_id)
-          VALUES ('merch_lalana_space', 'Lalana Space', '+6281234567890', 'pro', 'shield', ?)
+    sql: `INSERT INTO merchants (id, name, owner_whatsapp, manager_whatsapp, complaint_whatsapp, business_whatsapp, plan, default_mode, sales_rep_id)
+          VALUES ('merch_lalana_space', 'Lalana Space', '+6281234567890', '+6281234567890', '081234567890', '081234567890', 'pro', 'shield', ?)
           ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
             owner_whatsapp = excluded.owner_whatsapp,
+            manager_whatsapp = excluded.manager_whatsapp,
+            complaint_whatsapp = excluded.complaint_whatsapp,
+            business_whatsapp = excluded.business_whatsapp,
             plan = excluded.plan,
             default_mode = excluded.default_mode,
             sales_rep_id = excluded.sales_rep_id;`,
