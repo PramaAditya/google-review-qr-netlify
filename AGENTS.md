@@ -62,12 +62,17 @@ Connection protocol must use `libsql://` or `https://` via `@libsql/client`.
 ### Schema Definition
 
 ```sql
--- Master Table: QR Link Registry
+-- Master Table: QR Link Registry (Multi-table & B2B Ready)
 CREATE TABLE IF NOT EXISTS qr_links (
     id TEXT PRIMARY KEY,
+    merchant_id TEXT,
     batch_no TEXT,
     merchant_name TEXT,
+    table_no TEXT,
+    zone TEXT DEFAULT 'indoor',       -- 'indoor' | 'outdoor' | 'smoking' | 'bar'
+    mode TEXT DEFAULT 'direct',       -- 'direct' | 'shield' | 'loyalty'
     target_url TEXT,
+    negative_feedback_url TEXT,
     scan_count INTEGER DEFAULT 0,
     status TEXT DEFAULT 'unassigned', -- 'unassigned' | 'active' | 'suspended'
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -75,7 +80,7 @@ CREATE TABLE IF NOT EXISTS qr_links (
     last_scanned_at DATETIME
 );
 
--- Telemetry Table: Audit Scan Logs
+-- Telemetry Table: Audit Scan Logs & Visitor Tracking
 CREATE TABLE IF NOT EXISTS qr_scans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     link_id TEXT NOT NULL,
@@ -85,13 +90,41 @@ CREATE TABLE IF NOT EXISTS qr_scans (
     country TEXT,
     user_agent TEXT,
     referer TEXT,
+    visitor_id TEXT,                  -- 180-day cookie UUID for repeat visitor detection
+    device_type TEXT,                 -- 'ios' | 'android' | 'desktop' | 'other'
+    rating_given INTEGER,             -- 1-5 if mode == 'shield'
     FOREIGN KEY (link_id) REFERENCES qr_links(id)
 );
 
--- Indexes for Fast Lookup
+-- Merchant Registry: B2B Accounts & WhatsApp Alert
+CREATE TABLE IF NOT EXISTS merchants (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    owner_whatsapp TEXT,
+    plan TEXT DEFAULT 'free',         -- 'free' | 'starter' | 'pro'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Feedback Firewall: Private Feedback / Intercepted Complaints
+CREATE TABLE IF NOT EXISTS feedback_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    merchant_id TEXT NOT NULL,
+    link_id TEXT NOT NULL,
+    rating INTEGER NOT NULL,
+    comment TEXT,
+    customer_contact TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (merchant_id) REFERENCES merchants(id),
+    FOREIGN KEY (link_id) REFERENCES qr_links(id)
+);
+
+-- Indexes for Fast Edge Lookup & Analytics
 CREATE INDEX IF NOT EXISTS idx_qr_links_status ON qr_links(status);
+CREATE INDEX IF NOT EXISTS idx_qr_links_merchant ON qr_links(merchant_id);
 CREATE INDEX IF NOT EXISTS idx_qr_scans_link_id ON qr_scans(link_id);
 CREATE INDEX IF NOT EXISTS idx_qr_scans_scanned_at ON qr_scans(scanned_at);
+CREATE INDEX IF NOT EXISTS idx_qr_scans_visitor ON qr_scans(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_logs_merchant ON feedback_logs(merchant_id);
 ```
 
 ### Atomic Query Pattern (Single Round-Trip Execution)

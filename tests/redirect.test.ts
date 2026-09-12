@@ -38,7 +38,7 @@ describe("Google Review QR Redirect Function", () => {
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
     expect(res.headers.get("Cache-Control")).toContain("no-store");
-
+    expect(res.headers.get("Set-Cookie")).toContain("_gqr_vid=");
     // 4. Verify scan count incremented in Turso
     const after = await db.execute({
       sql: "SELECT scan_count FROM qr_links WHERE id = 'lalana';",
@@ -55,6 +55,8 @@ describe("Google Review QR Redirect Function", () => {
     expect(scanLog.rows.length).toBe(1);
     expect(scanLog.rows[0].ip).toBe("114.124.200.1");
     expect(scanLog.rows[0].city).toBe("Bandung");
+    expect(scanLog.rows[0].device_type).toBe("ios");
+    expect(scanLog.rows[0].visitor_id).toBeTruthy();
   });
 
   it("handles unassigned stickers gracefully with HTML status page", async () => {

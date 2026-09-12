@@ -7,7 +7,28 @@ const db = createClient({
   authToken: process.env.TURSO_AUTH_TOKEN!,
 });
 
-function renderHtmlPage(title: string, message: string, badge: string, badgeColor: string, statusCode: number = 200) {
+function detectDeviceType(ua: string): string {
+  const lower = ua.toLowerCase();
+  if (/iphone|ipad|ipod/.test(lower)) return "ios";
+  if (/android/.test(lower)) return "android";
+  if (/windows|macintosh|linux/.test(lower)) return "desktop";
+  return "other";
+}
+
+function parseVisitorCookie(cookieHeader: string | null): string | null {
+  if (!cookieHeader) return null;
+  const match = cookieHeader.match(/(?:^|;\s*)_gqr_vid=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function renderHtmlPage(
+  title: string,
+  message: string,
+  badge: string,
+  badgeColor: string,
+  statusCode: number = 200,
+  extraHeaders: Record<string, string> = {}
+) {
   const html = `<!DOCTYPE html>
 <html lang="id">
 <head>
@@ -82,6 +103,7 @@ function renderHtmlPage(title: string, message: string, badge: string, badgeColo
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store, no-cache, must-revalidate",
+      ...extraHeaders,
     },
   });
 }
@@ -99,12 +121,28 @@ export default async (req: Request, context: Context) => {
     );
   }
 
-  // Extract client telemetry
+  // Extract client telemetry & device attributes
   const ip = req.headers.get("x-nf-client-connection-ip") || req.headers.get("x-forwarded-for") || "";
   const city = context.geo?.city || req.headers.get("x-city") || "";
   const country = context.geo?.country?.name || req.headers.get("x-country") || "";
   const userAgent = req.headers.get("user-agent") || "";
   const referer = req.headers.get("referer") || "";
+  const deviceType = detectDeviceType(userAgent);
+
+  // Extract or generate anonymous visitor cookie (180 days retention)
+  const cookieHeader = req.headers.get("cookie");
+  const existingVisitorId = parseVisitorCookie(cookieHeader);
+  const visitorId = existingVisitorId || crypto.randomUUID();
+  const isNewVisitor = !existingVisitorId;
+
+  // Build response headers (including Set-Cookie if newly minted)
+  const responseHeaders: Record<string, string> = {
+    "Cache-Control": "no-store, no-cache, must-revalidate",
+    "Pragma": "no-cache",
+  };
+  if (isNewVisitor) {
+    responseHeaders["Set-Cookie"] = `_gqr_vid=${visitorId}; Path=/; Max-Age=15552000; SameSite=Lax; Secure`;
+  }
 
   try {
     // Fast path: Atomic single round-trip update and telemetry insert
@@ -113,34 +151,34 @@ export default async (req: Request, context: Context) => {
         sql: `UPDATE qr_links 
               SET scan_count = scan_count + 1, last_scanned_at = CURRENT_TIMESTAMP 
               WHERE id = ? AND status = 'active' AND target_url IS NOT NULL 
-              RETURNING target_url, merchant_name;`,
+              RETURNING target_url, merchant_name, mode, negative_feedback_url;`,
         args: [id],
       },
       {
-        sql: `INSERT INTO qr_scans (link_id, ip, city, country, user_agent, referer) 
-              SELECT ?, ?, ?, ?, ?, ? 
+        sql: `INSERT INTO qr_scans (link_id, ip, city, country, user_agent, referer, visitor_id, device_type) 
+              SELECT ?, ?, ?, ?, ?, ?, ?, ? 
               WHERE EXISTS (SELECT 1 FROM qr_links WHERE id = ?);`,
-        args: [id, ip, city, country, userAgent, referer, id],
+        args: [id, ip, city, country, userAgent, referer, visitorId, deviceType, id],
       },
     ]);
 
     // If active link found and updated, issue HTTP 302 redirect immediately
     if (updateResult.rows.length > 0) {
-      const targetUrl = updateResult.rows[0].target_url as string;
+      const row = updateResult.rows[0];
+      const targetUrl = row.target_url as string;
 
       return new Response(null, {
         status: 302,
         headers: {
+          ...responseHeaders,
           "Location": targetUrl,
-          "Cache-Control": "no-store, no-cache, must-revalidate",
-          "Pragma": "no-cache",
         },
       });
     }
 
     // Fallback path: Check if ID exists but is unassigned, suspended, or missing
     const lookup = await db.execute({
-      sql: `SELECT id, status, merchant_name, target_url FROM qr_links WHERE id = ? LIMIT 1;`,
+      sql: `SELECT id, status, merchant_name, target_url, table_no FROM qr_links WHERE id = ? LIMIT 1;`,
       args: [id],
     });
 
@@ -150,7 +188,8 @@ export default async (req: Request, context: Context) => {
         `Stiker dengan ID <strong>"${id}"</strong> belum terdaftar di sistem.`,
         "404 Not Found",
         "#ef4444",
-        404
+        404,
+        responseHeaders
       );
     }
 
@@ -163,7 +202,8 @@ export default async (req: Request, context: Context) => {
         `Stiker QR ini sudah terpasang (ID: <strong>${id}</strong>) namun belum dihubungkan ke halaman Google Review merchant. Silakan hubungi staff restoran atau representatif sales.`,
         "Belum Aktif",
         "#f59e0b",
-        200
+        200,
+        responseHeaders
       );
     }
 
@@ -173,7 +213,8 @@ export default async (req: Request, context: Context) => {
         `Layanan review untuk stiker ID: <strong>${id}</strong> sedang dinonaktifkan sementara.`,
         "Nonaktif",
         "#64748b",
-        200
+        200,
+        responseHeaders
       );
     }
 
@@ -182,7 +223,8 @@ export default async (req: Request, context: Context) => {
       `Stiker ID <strong>${id}</strong> memiliki konfigurasi yang belum lengkap.`,
       "Peringatan",
       "#f59e0b",
-      200
+      200,
+      responseHeaders
     );
   } catch (error: any) {
     console.error("Redirect handler error:", error);
@@ -191,7 +233,8 @@ export default async (req: Request, context: Context) => {
       "Tidak dapat memproses pengalihan review saat ini. Silakan coba beberapa saat lagi.",
       "Server Error",
       "#ef4444",
-      500
+      500,
+      responseHeaders
     );
   }
 };

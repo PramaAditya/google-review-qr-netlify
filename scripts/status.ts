@@ -11,9 +11,16 @@ if (!url || !authToken) {
 const db = createClient({ url, authToken });
 
 async function checkStatus() {
-  console.log("=== QR LINKS REGISTRY ===");
+  console.log("=== MERCHANTS PROFILES ===");
+  const merchants = await db.execute(`
+    SELECT id, name, owner_whatsapp, plan, created_at 
+    FROM merchants;
+  `);
+  console.table(merchants.rows);
+
+  console.log("\n=== QR LINKS REGISTRY (MULTI-TABLE READY) ===");
   const links = await db.execute(`
-    SELECT id, merchant_name, status, scan_count, last_scanned_at 
+    SELECT id, merchant_id, table_no, zone, mode, status, scan_count, last_scanned_at 
     FROM qr_links 
     ORDER BY created_at ASC;
   `);
@@ -21,7 +28,7 @@ async function checkStatus() {
 
   console.log("\n=== RECENT SCANS TELEMETRY (LATEST 10) ===");
   const scans = await db.execute(`
-    SELECT id, link_id, ip, city, scanned_at, user_agent 
+    SELECT id, link_id, ip, city, device_type, SUBSTR(visitor_id, 1, 8) || '...' as visitor_short, scanned_at 
     FROM qr_scans 
     ORDER BY id DESC 
     LIMIT 10;
