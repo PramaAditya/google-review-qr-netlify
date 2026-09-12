@@ -16,6 +16,16 @@ function standardizePhone(phone: string): string {
   return clean;
 }
 
+function formatWhatsAppUrlNumber(phone: string): string {
+  let clean = phone.replace(/\D/g, "");
+  if (clean.startsWith("0")) {
+    clean = "62" + clean.slice(1);
+  } else if (!clean.startsWith("62")) {
+    clean = "62" + clean;
+  }
+  return clean;
+}
+
 function jsonResponse(data: any, status: number = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -150,7 +160,10 @@ export default async (req: Request, context: Context) => {
       const tableEnd = body.table_end ? parseInt(String(body.table_end), 10) : null;
       const cashierStart = body.cashier_start ? parseInt(String(body.cashier_start), 10) : null;
       const cashierEnd = body.cashier_end ? parseInt(String(body.cashier_end), 10) : null;
+      const selectedMode = (body.mode === "direct") ? "direct" : "shield";
 
+      const complaintWa = (body.complaint_whatsapp || body.manager_whatsapp) ? standardizePhone(String(body.complaint_whatsapp || body.manager_whatsapp)) : null;
+      const businessWa = (body.business_whatsapp || body.owner_whatsapp) ? standardizePhone(String(body.business_whatsapp || body.owner_whatsapp)) : complaintWa;
       if (!rawPhone || !inputPin) {
         return jsonResponse({ error: "Autentikasi sales diperlukan." }, 401);
       }
@@ -160,7 +173,11 @@ export default async (req: Request, context: Context) => {
       if (!mapsUrl) {
         return jsonResponse({ error: "Link Google Maps / Google Review wajib diisi." }, 400);
       }
-
+      if (selectedMode === "shield" && !complaintWa) {
+        return jsonResponse({ 
+          error: "WhatsApp Penanganan Komplain (complaint_whatsapp) wajib diisi jika mode Reputation Shield aktif agar tamu dapat menyampaikan keluhan." 
+        }, 400);
+      }
       // Verify sales rep credentials
       const stdPhone = standardizePhone(rawPhone);
       const repCheck = await db.execute({
@@ -181,21 +198,22 @@ export default async (req: Request, context: Context) => {
       const merchantId = `${merchantSlug}_${Date.now().toString(36)}`;
 
       // Setup negative feedback WhatsApp destination
-      const negativeWaNumber = ownerWa || "6281234567890";
-      const negativeFeedbackUrl = `https://wa.me/${negativeWaNumber}?text=Halo+Manager+${encodeURIComponent(merchantName)}+Saya+ada+masukan`;
-
-      const selectedMode = (body.mode === "direct") ? "direct" : "shield";
+      const waTarget = complaintWa ? formatWhatsAppUrlNumber(complaintWa) : "6281234567890";
+      const negativeFeedbackUrl = `https://wa.me/${waTarget}?text=Halo+Manager+${encodeURIComponent(merchantName)}+Saya+ada+masukan`;
 
       // 1. Insert Merchant
       await db.execute({
-        sql: `INSERT INTO merchants (id, name, owner_whatsapp, plan, default_mode, sales_rep_id)
-              VALUES (?, ?, ?, 'pro', ?, ?)
+        sql: `INSERT INTO merchants (id, name, owner_whatsapp, manager_whatsapp, complaint_whatsapp, business_whatsapp, plan, default_mode, sales_rep_id)
+              VALUES (?, ?, ?, ?, ?, ?, 'pro', ?, ?)
               ON CONFLICT(id) DO UPDATE SET
                 name = excluded.name,
                 owner_whatsapp = excluded.owner_whatsapp,
+                manager_whatsapp = excluded.manager_whatsapp,
+                complaint_whatsapp = excluded.complaint_whatsapp,
+                business_whatsapp = excluded.business_whatsapp,
                 default_mode = excluded.default_mode,
                 sales_rep_id = excluded.sales_rep_id;`,
-        args: [merchantId, merchantName, ownerWa, selectedMode, stdPhone],
+        args: [merchantId, merchantName, businessWa, complaintWa, complaintWa, businessWa, selectedMode, stdPhone],
       });
 
       const batchStatements = [];

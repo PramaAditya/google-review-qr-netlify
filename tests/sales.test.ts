@@ -62,6 +62,9 @@ describe("Sales PWA Backend APIs", () => {
         pin: "1234",
         merchant_name: "Test PWA Cafe",
         maps_url: "https://search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg",
+        complaint_whatsapp: "081298765432",
+        business_whatsapp: "081298765432",
+        mode: "shield",
         table_start: 50,
         table_end: 52, // S-50, S-51, S-52 = 3 tables
         cashier_start: 10,
@@ -90,5 +93,48 @@ describe("Sales PWA Backend APIs", () => {
     for (const row of checkDb.rows) {
       expect(row.status).toBe("active");
     }
+  });
+  it("rejects activation if mode is shield and complaint_whatsapp is missing", async () => {
+    const req = new Request("https://grqrr.netlify.app/api/sales/activate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: "081234567890",
+        pin: "1234",
+        merchant_name: "Test No WA Cafe",
+        maps_url: "https://search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg",
+        mode: "shield",
+        table_start: 90,
+        table_end: 91,
+      }),
+    });
+
+    const res = await salesHandler(req, {} as any);
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain("Penanganan Komplain");
+  });
+
+  it("allows activation without complaint_whatsapp if mode is direct", async () => {
+    const req = new Request("https://grqrr.netlify.app/api/sales/activate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: "081234567890",
+        pin: "1234",
+        merchant_name: "Test Direct Cafe",
+        maps_url: "https://search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg",
+        mode: "direct",
+        cashier_start: 99,
+        cashier_end: 99,
+      }),
+    });
+
+    const res = await salesHandler(req, {} as any);
+    expect(res.status).toBe(200);
+
+    // Cleanup
+    await db.execute("DELETE FROM qr_links WHERE id = 'A-99';");
+    await db.execute("DELETE FROM merchants WHERE name = 'Test Direct Cafe';");
   });
 });

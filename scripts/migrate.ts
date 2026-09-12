@@ -96,6 +96,9 @@ async function migrate() {
   await addColumnIfNotExists("merchants", "default_mode", "TEXT DEFAULT 'direct'");
 
   await addColumnIfNotExists("merchants", "sales_rep_id", "TEXT");
+  await addColumnIfNotExists("merchants", "manager_whatsapp", "TEXT");
+  await addColumnIfNotExists("merchants", "complaint_whatsapp", "TEXT");
+  await addColumnIfNotExists("merchants", "business_whatsapp", "TEXT");
   // 2. Expand qr_links columns for B2B SaaS
   console.log("\n--- Expanding 'qr_links' Columns ---");
   await addColumnIfNotExists("qr_links", "merchant_id", "TEXT");

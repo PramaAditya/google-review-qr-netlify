@@ -433,24 +433,44 @@
           <input type="url" id="act-maps" placeholder="https://maps.app.goo.gl/... atau Place ID" required>
         </div>
 
-        <div class="form-group">
-          <label for="act-owner-wa">WhatsApp Manajer / Toko (Opsional)</label>
-          <input type="tel" id="act-owner-wa" placeholder="08xxxxxxxxxx (Untuk laporan & alert komplain)">
-        </div>
-
-        <!-- Mode Selection Toggle -->
+        <!-- 1. Mode Selection Toggle -->
         <div class="form-group">
           <label>Mode Pengalihan Review</label>
           <div class="mode-grid">
             <div class="mode-card active" id="mode-shield" onclick="selectMode('shield')">
               <div class="mode-name">Reputation Shield</div>
-              <div class="mode-desc">Bintang 4-5 ke Google, Bintang 1-3 dicegat ke WA Manajer.</div>
+              <div class="mode-desc">Bintang 4-5 ke Google, Bintang 1-3 dicegat ke WA Komplain.</div>
             </div>
             <div class="mode-card" id="mode-direct" onclick="selectMode('direct')">
               <div class="mode-name">Direct Langsung</div>
               <div class="mode-desc">Semua scan langsung buka form review Google Maps.</div>
             </div>
           </div>
+        </div>
+
+        <!-- 2. WhatsApp Penanganan Komplain (complaint_whatsapp) -->
+        <div class="form-group">
+          <label for="act-complaint-wa">
+            WhatsApp Penanganan Komplain <span id="label-complaint-req" style="color: #ef4444;">*</span>
+          </label>
+          <input type="tel" id="act-complaint-wa" placeholder="08xxxxxxxxxx (Nomor staf/manajer di lokasi)" required oninput="syncBusinessWa()">
+          <div id="hint-complaint-wa" style="font-size: 0.75rem; color: #b45309; margin-top: 0.3rem;">
+            Wajib diisi untuk mode Shield agar komplain bintang 1-3 masuk ke staf standby di lokasi.
+          </div>
+        </div>
+
+        <!-- Checkbox Auto-sync -->
+        <div class="form-group" style="margin-top: -0.35rem; margin-bottom: 0.85rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; text-transform: none; font-weight: 600; cursor: pointer;">
+            <input type="checkbox" id="same-wa-checkbox" checked onchange="toggleSameWa()" style="width: 18px; height: 18px; accent-color: #18181b; cursor: pointer;">
+            <span>Nomor WhatsApp Bisnis / Owner sama dengan nomor komplain</span>
+          </label>
+        </div>
+
+        <!-- 3. WhatsApp Bisnis / Owner (business_whatsapp) -->
+        <div class="form-group" id="business-wa-group" style="display: none;">
+          <label for="act-business-wa">WhatsApp Bisnis / Owner (Opsional)</label>
+          <input type="tel" id="act-business-wa" placeholder="08xxxxxxxxxx (Untuk laporan mingguan & tagihan)">
         </div>
 
         <!-- Range Stiker (S-[N]) -->
@@ -619,6 +639,43 @@
     calcTotals();
   }
 
+  function toggleSameWa() {
+    var isSame = document.getElementById('same-wa-checkbox').checked;
+    var group = document.getElementById('business-wa-group');
+    if (isSame) {
+      group.style.display = 'none';
+      document.getElementById('act-business-wa').value = document.getElementById('act-complaint-wa').value;
+    } else {
+      group.style.display = 'block';
+    }
+  }
+
+  function syncBusinessWa() {
+    if (document.getElementById('same-wa-checkbox').checked) {
+      document.getElementById('act-business-wa').value = document.getElementById('act-complaint-wa').value;
+    }
+  }
+
+  function selectMode(mode) {
+    currentSelectedMode = mode;
+    document.getElementById('mode-shield').classList.toggle('active', mode === 'shield');
+    document.getElementById('mode-direct').classList.toggle('active', mode === 'direct');
+
+    var reqSpan = document.getElementById('label-complaint-req');
+    var hintEl = document.getElementById('hint-complaint-wa');
+    var input = document.getElementById('act-complaint-wa');
+    if (mode === 'shield') {
+      reqSpan.textContent = '*';
+      reqSpan.style.color = '#ef4444';
+      hintEl.style.display = 'block';
+      input.required = true;
+    } else {
+      reqSpan.textContent = '(Opsional)';
+      reqSpan.style.color = '#71717a';
+      hintEl.style.display = 'none';
+      input.required = false;
+    }
+  }
   function logout() {
     localStorage.removeItem('grqrr_sales_user');
     currentUser = null;
@@ -772,7 +829,14 @@
 
     var merchantName = document.getElementById('act-merchant').value;
     var mapsUrl = document.getElementById('act-maps').value;
-    var ownerWa = document.getElementById('act-owner-wa').value;
+    var complaintWa = document.getElementById('act-complaint-wa').value;
+    var businessWa = document.getElementById('act-business-wa').value || complaintWa;
+
+    if (currentSelectedMode === 'shield' && !complaintWa) {
+      alertEl.textContent = 'Nomor WhatsApp Penanganan Komplain wajib diisi jika mode Reputation Shield aktif.';
+      alertEl.className = 'alert alert-error';
+      return;
+    }
 
     var sFrom = parseInt(document.getElementById('s-from').value, 10);
     var sTo = parseInt(document.getElementById('s-to').value, 10);
@@ -797,7 +861,8 @@
         pin: currentUser.pin,
         merchant_name: merchantName,
         maps_url: mapsUrl,
-        owner_whatsapp: ownerWa || null,
+        complaint_whatsapp: complaintWa || null,
+        business_whatsapp: businessWa || null,
         mode: currentSelectedMode,
         table_start: hasTable ? sFrom : null,
         table_end: hasTable ? sTo : null,
@@ -834,8 +899,10 @@
         // Reset form inputs
         document.getElementById('act-merchant').value = '';
         document.getElementById('act-maps').value = '';
-        document.getElementById('act-owner-wa').value = '';
-        document.getElementById('s-from').value = '';
+        document.getElementById('act-complaint-wa').value = '';
+        document.getElementById('act-business-wa').value = '';
+        document.getElementById('same-wa-checkbox').checked = true;
+        toggleSameWa();
         document.getElementById('s-to').value = '';
         document.getElementById('a-from').value = '';
         document.getElementById('a-to').value = '';
