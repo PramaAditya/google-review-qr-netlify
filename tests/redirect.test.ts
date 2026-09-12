@@ -8,8 +8,8 @@ const db = createClient({
 });
 
 describe("Google Review QR Redirect Function", () => {
-  it("redirects active 'lalana' (direct mode) to Google Review URL", async () => {
-    const req = new Request("https://greview-qr.netlify.app/id/lalana", {
+  it("redirects active 'lalana' (direct mode) via short route to Google Review URL", async () => {
+    const req = new Request("https://greview-qr.netlify.app/lalana", {
       headers: {
         "x-nf-client-connection-ip": "114.124.200.1",
         "x-city": "Bandung",
@@ -32,8 +32,16 @@ describe("Google Review QR Redirect Function", () => {
     expect(res.headers.get("Set-Cookie")).toContain("_gqr_vid=");
   });
 
-  it("serves Reputation Shield micro-rating page for 'lalana-01' on initial scan", async () => {
-    const req = new Request("https://greview-qr.netlify.app/id/lalana-01", {
+  it("maintains backward compatibility for legacy '/id/lalana' path", async () => {
+    const req = new Request("https://greview-qr.netlify.app/id/lalana");
+    const context: any = { params: { id: "lalana" } };
+    const res = await handler(req, context);
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
+  });
+
+  it("serves Reputation Shield micro-rating page for 'lalana-01' on short route", async () => {
+    const req = new Request("https://greview-qr.netlify.app/lalana-01", {
       headers: {
         "x-nf-client-connection-ip": "114.124.200.2",
         "user-agent": "Mozilla/5.0 (Android 14; Mobile)",
@@ -53,11 +61,11 @@ describe("Google Review QR Redirect Function", () => {
     expect(html).toContain("Meja 01");
     expect(html).toContain("Hubungi Manager via WhatsApp");
     expect(html).toContain("rate(5)");
-    expect(html).toContain("/id/lalana-01?rate=");
+    expect(html).toContain("/lalana-01?rate=");
   });
 
   it("redirects to Google Review when 5-star rating chosen on 'lalana-01'", async () => {
-    const req = new Request("https://greview-qr.netlify.app/id/lalana-01?rate=5", {
+    const req = new Request("https://greview-qr.netlify.app/lalana-01?rate=5", {
       headers: {
         "x-nf-client-connection-ip": "114.124.200.3",
         "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
@@ -84,7 +92,7 @@ describe("Google Review QR Redirect Function", () => {
   });
 
   it("logs negative rating (rate=2) via background log ping on 'lalana-01'", async () => {
-    const req = new Request("https://greview-qr.netlify.app/id/lalana-01?rate=2&log_only=1", {
+    const req = new Request("https://greview-qr.netlify.app/lalana-01?rate=2&log_only=1", {
       headers: {
         "user-agent": "Mozilla/5.0 (Android 14; Mobile)",
       },
@@ -112,7 +120,7 @@ describe("Google Review QR Redirect Function", () => {
   });
 
   it("handles unassigned stickers gracefully with HTML status page", async () => {
-    const req = new Request("https://greview-qr.netlify.app/id/demo-unassigned");
+    const req = new Request("https://greview-qr.netlify.app/demo-unassigned");
     const context: any = { params: { id: "demo-unassigned" } };
 
     const res = await handler(req, context);
@@ -122,7 +130,7 @@ describe("Google Review QR Redirect Function", () => {
   });
 
   it("handles suspended stickers gracefully with notice", async () => {
-    const req = new Request("https://greview-qr.netlify.app/id/demo-suspended");
+    const req = new Request("https://greview-qr.netlify.app/demo-suspended");
     const context: any = { params: { id: "demo-suspended" } };
 
     const res = await handler(req, context);
@@ -132,7 +140,7 @@ describe("Google Review QR Redirect Function", () => {
   });
 
   it("returns 404 page for nonexistent ID", async () => {
-    const req = new Request("https://greview-qr.netlify.app/id/nonexistent-xyz");
+    const req = new Request("https://greview-qr.netlify.app/nonexistent-xyz");
     const context: any = { params: { id: "nonexistent-xyz" } };
 
     const res = await handler(req, context);

@@ -323,7 +323,7 @@ function renderShieldPage(
       </a>
       
       <div>
-        <a href="/id/${id}?rate=3&force_google=1" class="alt-link">
+        <a href="/${id}?rate=3&force_google=1" class="alt-link">
           Tetap tulis ulasan di Google Review
         </a>
       </div>
@@ -370,7 +370,7 @@ function renderShieldPage(
 
       if (rating <= 3) {
         // Log negative rating silently in background
-        fetch('/id/${id}?rate=' + rating + '&log_only=1').catch(function(){});
+        fetch('/${id}?rate=' + rating + '&log_only=1').catch(function(){});
         setTimeout(function() {
           document.getElementById('rating-view').style.display = 'none';
           document.getElementById('negative-view').style.display = 'block';
@@ -378,7 +378,7 @@ function renderShieldPage(
       } else {
         // Positive rating: forward directly to Google Review
         setTimeout(function() {
-          window.location.href = '/id/${id}?rate=' + rating;
+          window.location.href = '/${id}?rate=' + rating;
         }, 180);
       }
     }
@@ -564,5 +564,6 @@ export default async (req: Request, context: Context) => {
 };
 
 export const config: Config = {
-  path: "/id/:id",
+  path: ["/:id", "/id/:id"],
+  excludedPath: ["/images/*", "/favicon.ico", "/"],
 };

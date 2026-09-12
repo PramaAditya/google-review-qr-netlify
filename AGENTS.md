@@ -4,9 +4,9 @@
 
 This repository (`google-review-qr-netlify`) hosts the serverless redirect and telemetry microservice for the **Google Review QR Code Sticker** product line.
 
-Physical vinyl stickers with pre-printed unique QR codes are deployed across restaurant tables and cashier counters. Each sticker contains a unique URL endpoint:
+Physical vinyl stickers with pre-printed unique QR codes are deployed across restaurant tables and cashier counters. Each sticker contains a compact unique URL endpoint:
 ```text
-https://greview-qr.netlify.app/id/:id
+https://greview-qr.netlify.app/:id  (Legacy backward-compatible: /id/:id)
 ```
 
 ### Core Responsibilities
