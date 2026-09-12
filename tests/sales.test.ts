@@ -171,4 +171,43 @@ describe("Sales PWA Backend APIs", () => {
     await db.execute("DELETE FROM qr_links WHERE id IN ('S-81', 'S-12', 'A-5');");
     await db.execute("DELETE FROM merchants WHERE name = 'Test Loose Scanner Cafe';");
   });
+  it("checks code status via GET /api/sales/check?id=...", async () => {
+    // Active code S-1
+    const reqActive = new Request("https://grqrr.netlify.app/api/sales/check?id=S-1");
+    const resActive = await salesHandler(reqActive, {} as any);
+    expect(resActive.status).toBe(200);
+    const dataActive = await resActive.json();
+    expect(dataActive.exists).toBe(true);
+    expect(dataActive.is_active).toBe(true);
+    expect(dataActive.merchant_name).toContain("Lalana");
+
+    // Fresh nonexistent code
+    const reqFresh = new Request("https://grqrr.netlify.app/api/sales/check?id=S-9999");
+    const resFresh = await salesHandler(reqFresh, {} as any);
+    expect(resFresh.status).toBe(200);
+    const dataFresh = await resFresh.json();
+    expect(dataFresh.exists).toBe(false);
+    expect(dataFresh.is_active).toBe(false);
+  });
+
+  it("strictly prevents overriding already activated QR codes with 409 Conflict", async () => {
+    const req = new Request("https://grqrr.netlify.app/api/sales/activate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: "081234567890",
+        pin: "1234",
+        merchant_name: "Test Hacker Cafe",
+        maps_url: "https://search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg",
+        mode: "direct",
+        items: ["S-1"], // S-1 is already active in Lalana Space!
+      }),
+    });
+
+    const res = await salesHandler(req, {} as any);
+    expect(res.status).toBe(409); // Conflict!
+    const data = await res.json();
+    expect(data.error).toContain("tidak dapat ditimpa");
+    expect(data.conflicts).toContain("S-1");
+  });
 });

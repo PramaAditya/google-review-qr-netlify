@@ -860,6 +860,21 @@
       setTimeout(function() { osc.stop(); ctx.close(); }, 80);
     } catch (e) {}
   }
+  function playErrorTone() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sawtooth";
+      osc.frequency.value = 220;
+      gain.gain.value = 0.15;
+      osc.start();
+      setTimeout(function() { osc.stop(); ctx.close(); }, 160);
+    } catch (e) {}
+  }
+
 
   function triggerHaptic() {
     if (navigator.vibrate) {
@@ -1089,7 +1104,7 @@
       canvas.height = video.videoHeight;
       var ctx = canvas.getContext('2d', { willReadFrequently: true });
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+      var rawQrData = null;
       var foundCode = null;
 
       // Try jsQR
@@ -1099,51 +1114,130 @@
           inversionAttempts: 'dontInvert'
         });
         if (qrResult && qrResult.data) {
-          foundCode = parseScannedQrText(qrResult.data);
+          rawQrData = qrResult.data;
+          foundCode = parseScannedQrText(rawQrData);
         }
       }
 
-      if (foundCode) {
-        handleQrDetected(foundCode);
+      if (rawQrData) {
+        if (foundCode) {
+          handleQrDetected(foundCode);
+        } else {
+          handleInvalidQrDetected(rawQrData);
+        }
       }
     }
 
     scannerAnimId = requestAnimationFrame(scanFrame);
   }
 
-  function handleQrDetected(codeId) {
+  var lastInvalidAlertTime = 0;
+  function handleInvalidQrDetected(rawText) {
+    currentDetectedId = null;
+    var banner = document.getElementById('detected-banner');
+    var titleEl = document.getElementById('det-name');
+    var subEl = document.getElementById('det-sub');
+    var pickBtn = document.getElementById('btn-pick-action');
+
+    banner.classList.remove('hidden');
+    banner.style.borderColor = '#ef4444';
+    banner.style.background = 'rgba(239, 68, 68, 0.2)';
+
+    titleEl.textContent = '❌ QR Code Tidak Valid';
+    titleEl.style.color = '#f87171';
+
+    var preview = rawText.length > 28 ? rawText.slice(0, 26) + '...' : rawText;
+    subEl.textContent = 'Bukan stiker S-[N] atau akrilik A-[N] (' + preview + ')';
+    subEl.style.color = '#fca5a5';
+
+    pickBtn.disabled = true;
+    pickBtn.textContent = 'DIABAIKAN';
+    pickBtn.style.background = '#4b5563';
+
+    var now = Date.now();
+    if (now - lastInvalidAlertTime > 1600) {
+      lastInvalidAlertTime = now;
+      playErrorTone();
+      triggerHaptic();
+    }
+  }
+
+  var activeCodeCache = {};
+  async function checkCodeStatus(codeId) {
+    if (activeCodeCache[codeId] !== undefined) return activeCodeCache[codeId];
+    try {
+      var res = await fetch('/api/sales/check?id=' + encodeURIComponent(codeId));
+      var data = await res.json();
+      activeCodeCache[codeId] = data;
+      return data;
+    } catch (e) {
+      return { exists: false, is_active: false };
+    }
+  }
+
+  async function handleQrDetected(codeId) {
     currentDetectedId = codeId;
     var banner = document.getElementById('detected-banner');
     var titleEl = document.getElementById('det-name');
     var subEl = document.getElementById('det-sub');
     var pickBtn = document.getElementById('btn-pick-action');
 
+    banner.classList.remove('hidden');
+    banner.style.borderColor = '#3f3f46';
+    banner.style.background = '#27272a';
+    titleEl.style.color = '#ffffff';
+
     var isCashier = codeId.startsWith('A-');
     var labelName = isCashier ? 'Akrilik ' + codeId : 'Stiker ' + codeId;
-
-    banner.classList.remove('hidden');
     titleEl.textContent = labelName;
 
+    // 1. Check if already in cart
     if (scannedItems.has(codeId)) {
       subEl.textContent = 'Sudah masuk keranjang';
       subEl.style.color = '#f59e0b';
       pickBtn.disabled = true;
+      pickBtn.style.background = '#4b5563';
       pickBtn.textContent = 'TERPILIH';
-    } else {
-      subEl.textContent = 'Ditemukan! Siap ditambahkan';
-      subEl.style.color = '#a1a1aa';
-      pickBtn.disabled = false;
-      pickBtn.textContent = '+ PILIH';
+      return;
+    }
 
-      // Auto-add debounce (if held in frame for 0.4s)
+    // 2. Check if already active in database (prevent overwrite!)
+    var statusInfo = await checkCodeStatus(codeId);
+    if (statusInfo.is_active) {
+      banner.style.borderColor = '#f59e0b';
+      banner.style.background = 'rgba(245, 158, 11, 0.2)';
+      titleEl.textContent = '⚠️ ' + labelName + ' Sudah Aktif!';
+      titleEl.style.color = '#fbbf24';
+      subEl.textContent = 'Terpasang di ' + (statusInfo.merchant_name || 'merchant lain') + '. Tidak dapat ditimpa.';
+      subEl.style.color = '#fde68a';
+      pickBtn.disabled = true;
+      pickBtn.style.background = '#4b5563';
+      pickBtn.textContent = 'SUDAH TERPAKAI';
+
       var now = Date.now();
-      if (lastAddedId !== codeId || now - lastAddedTime > 1200) {
-        lastAddedId = codeId;
-        lastAddedTime = now;
-        addCurrentDetected();
+      if (now - lastInvalidAlertTime > 1600) {
+        lastInvalidAlertTime = now;
+        playErrorTone();
       }
+      return;
+    }
+
+    // 3. Fresh unassigned item -> ready to add
+    subEl.textContent = 'Ditemukan! Siap ditambahkan';
+    subEl.style.color = '#a1a1aa';
+    pickBtn.disabled = false;
+    pickBtn.style.background = '#22c55e';
+    pickBtn.textContent = '+ PILIH';
+
+    // Auto-add debounce
+    var now = Date.now();
+    if (lastAddedId !== codeId || now - lastAddedTime > 1200) {
+      lastAddedId = codeId;
+      lastAddedTime = now;
+      addCurrentDetected();
     }
   }
+
 
   function addCurrentDetected() {
     if (!currentDetectedId) return;

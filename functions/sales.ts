@@ -15,6 +15,16 @@ function standardizePhone(phone: string): string {
   }
   return clean;
 }
+function normalizeQrId(rawId: string): string {
+  const match = rawId.trim().match(/^([SA])-?0*(\d+)$/i);
+  if (match) {
+    const prefix = match[1].toUpperCase();
+    const num = parseInt(match[2], 10);
+    return `${prefix}-${num}`;
+  }
+  return rawId.trim();
+}
+
 
 function formatWhatsAppUrlNumber(phone: string): string {
   let clean = phone.replace(/\D/g, "");
@@ -51,6 +61,32 @@ export default async (req: Request, context: Context) => {
       },
     });
   }
+  // 0. GET /api/sales/check?id=... (Check if QR ID is valid or already active)
+  if (path.endsWith("/check") && req.method === "GET") {
+    const idParam = url.searchParams.get("id");
+    if (!idParam) {
+      return jsonResponse({ error: "Parameter id wajib disertakan." }, 400);
+    }
+    const checkId = normalizeQrId(idParam);
+    const checkRes = await db.execute({
+      sql: `SELECT id, merchant_name, status FROM qr_links WHERE id = ? LIMIT 1;`,
+      args: [checkId],
+    });
+
+    if (checkRes.rows.length === 0) {
+      return jsonResponse({ id: checkId, exists: false, is_active: false });
+    }
+
+    const row = checkRes.rows[0];
+    return jsonResponse({
+      id: checkId,
+      exists: true,
+      status: row.status,
+      is_active: row.status === "active",
+      merchant_name: row.merchant_name || null,
+    });
+  }
+
 
   // 1. POST /api/sales/login
   if (path.endsWith("/login") && req.method === "POST") {
@@ -192,6 +228,43 @@ export default async (req: Request, context: Context) => {
       }
 
       const rep = repCheck.rows[0];
+      // Pre-check for conflicts: strictly prevent overriding existing activated QR codes
+      const allTargetIds: string[] = [];
+      if (Array.isArray(body.items)) {
+        for (const it of body.items) {
+          const norm = normalizeQrId(String(it));
+          if (norm && !allTargetIds.includes(norm)) allTargetIds.push(norm);
+        }
+      }
+      if (tableStart !== null && tableEnd !== null && tableStart <= tableEnd) {
+        for (let i = tableStart; i <= tableEnd; i++) {
+          const id = `S-${i}`;
+          if (!allTargetIds.includes(id)) allTargetIds.push(id);
+        }
+      }
+      if (cashierStart !== null && cashierEnd !== null && cashierStart <= cashierEnd) {
+        for (let i = cashierStart; i <= cashierEnd; i++) {
+          const id = `A-${i}`;
+          if (!allTargetIds.includes(id)) allTargetIds.push(id);
+        }
+      }
+
+      if (allTargetIds.length > 0) {
+        const placeholders = allTargetIds.map(() => "?").join(", ");
+        const conflictRes = await db.execute({
+          sql: `SELECT id, merchant_name FROM qr_links WHERE id IN (${placeholders}) AND status = 'active';`,
+          args: allTargetIds,
+        });
+
+        if (conflictRes.rows.length > 0) {
+          const list = conflictRes.rows.map(r => `${r.id} (di ${r.merchant_name || 'Merchant lain'})`).join(", ");
+          return jsonResponse({
+            error: `Item berikut sudah aktif dan tidak dapat ditimpa: ${list}. Harap gunakan stiker fisik baru.`,
+            conflicts: conflictRes.rows.map(r => String(r.id)),
+          }, 409);
+        }
+      }
+
 
       // Generate merchant ID from slug
       const merchantSlug = "merch_" + merchantName.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 32);
