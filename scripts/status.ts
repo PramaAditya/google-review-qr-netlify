@@ -26,9 +26,26 @@ async function checkStatus() {
   `);
   console.table(links.rows);
 
+  console.log("\n=== RATING FEEDBACK TELEMETRY ===");
+  const ratings = await db.execute(`
+    SELECT link_id, 
+           CASE 
+             WHEN rating_given IS NULL THEN 'Scan Only (No Rating)' 
+             ELSE CAST(rating_given AS TEXT) || ' Bintang' 
+           END as rating_label,
+           COUNT(*) as total_occurrences
+    FROM qr_scans 
+    GROUP BY link_id, rating_given
+    ORDER BY link_id, rating_given DESC;
+  `);
+  console.table(ratings.rows);
+
   console.log("\n=== RECENT SCANS TELEMETRY (LATEST 10) ===");
   const scans = await db.execute(`
-    SELECT id, link_id, ip, city, device_type, SUBSTR(visitor_id, 1, 8) || '...' as visitor_short, scanned_at 
+    SELECT id, link_id, ip, city, device_type, 
+           rating_given,
+           SUBSTR(visitor_id, 1, 8) || '...' as visitor_short, 
+           scanned_at 
     FROM qr_scans 
     ORDER BY id DESC 
     LIMIT 10;
