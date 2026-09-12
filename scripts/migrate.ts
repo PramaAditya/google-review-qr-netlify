@@ -72,12 +72,24 @@ async function migrate() {
       FOREIGN KEY (merchant_id) REFERENCES merchants(id),
       FOREIGN KEY (link_id) REFERENCES qr_links(id)
     );`,
+    `CREATE TABLE IF NOT EXISTS sales_reps (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      phone TEXT UNIQUE NOT NULL,
+      pin TEXT NOT NULL,
+      commission_table INTEGER DEFAULT 3000,
+      commission_cashier INTEGER DEFAULT 7000,
+      status TEXT DEFAULT 'active',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_login_at DATETIME
+    );`,
   ]);
 
   // 1.1 Add default_mode to merchants
   console.log("\n--- Expanding 'merchants' Columns ---");
   await addColumnIfNotExists("merchants", "default_mode", "TEXT DEFAULT 'direct'");
 
+  await addColumnIfNotExists("merchants", "sales_rep_id", "TEXT");
   // 2. Expand qr_links columns for B2B SaaS
   console.log("\n--- Expanding 'qr_links' Columns ---");
   await addColumnIfNotExists("qr_links", "merchant_id", "TEXT");
@@ -86,6 +98,8 @@ async function migrate() {
   await addColumnIfNotExists("qr_links", "mode", "TEXT DEFAULT 'direct'");
   await addColumnIfNotExists("qr_links", "negative_feedback_url", "TEXT");
 
+  await addColumnIfNotExists("qr_links", "sales_rep_id", "TEXT");
+  await addColumnIfNotExists("qr_links", "sticker_type", "TEXT DEFAULT 'vinyl_table'");
   // 3. Expand qr_scans columns for Advanced Telemetry
   console.log("\n--- Expanding 'qr_scans' Columns ---");
   await addColumnIfNotExists("qr_scans", "visitor_id", "TEXT");
@@ -101,6 +115,9 @@ async function migrate() {
     `CREATE INDEX IF NOT EXISTS idx_qr_scans_scanned_at ON qr_scans(scanned_at);`,
     `CREATE INDEX IF NOT EXISTS idx_qr_scans_visitor ON qr_scans(visitor_id);`,
     `CREATE INDEX IF NOT EXISTS idx_feedback_logs_merchant ON feedback_logs(merchant_id);`,
+    `CREATE INDEX IF NOT EXISTS idx_merchants_sales_rep ON merchants(sales_rep_id);`,
+    `CREATE INDEX IF NOT EXISTS idx_qr_links_sales_rep ON qr_links(sales_rep_id);`,
+    `CREATE INDEX IF NOT EXISTS idx_sales_reps_phone ON sales_reps(phone);`,
   ]);
 
   console.log("\nMigration completed successfully! All tables, columns, and indexes are ready.");

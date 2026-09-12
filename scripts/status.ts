@@ -11,16 +11,44 @@ if (!url || !authToken) {
 const db = createClient({ url, authToken });
 
 async function checkStatus() {
-  console.log("=== MERCHANTS PROFILES ===");
+  console.log("=== SALES REPRESENTATIVES ROSTER ===");
+  const sales = await db.execute(`
+    SELECT id as username_phone, name, pin, 
+           'Rp ' || commission_table as komisi_meja, 
+           'Rp ' || commission_cashier as komisi_kasir, 
+           status, created_at 
+    FROM sales_reps;
+  `);
+  console.table(sales.rows);
+
+  console.log("\n=== SALES ATTRIBUTION & COMMISSION CALCULATION ===");
+  const commissions = await db.execute(`
+    SELECT 
+      s.name as nama_sales,
+      s.phone as login_phone,
+      COUNT(DISTINCT m.id) as total_merchants,
+      COUNT(CASE WHEN l.sticker_type = 'vinyl_table' THEN 1 END) as stiker_meja_terpasang,
+      COUNT(CASE WHEN l.sticker_type = 'acrylic_cashier' THEN 1 END) as akrilik_kasir_terpasang,
+      (COUNT(CASE WHEN l.sticker_type = 'vinyl_table' THEN 1 END) * s.commission_table) +
+      (COUNT(CASE WHEN l.sticker_type = 'acrylic_cashier' THEN 1 END) * s.commission_cashier) as total_komisi_rp
+    FROM sales_reps s
+    LEFT JOIN merchants m ON s.id = m.sales_rep_id
+    LEFT JOIN qr_links l ON m.id = l.merchant_id AND l.status = 'active'
+    GROUP BY s.id;
+  `);
+  console.table(commissions.rows);
+
+  console.log("\n=== MERCHANTS PROFILES ===");
   const merchants = await db.execute(`
-    SELECT id, name, owner_whatsapp, plan, default_mode, created_at 
-    FROM merchants;
+    SELECT m.id, m.name, m.owner_whatsapp, m.plan, m.default_mode, s.name as sales_rep 
+    FROM merchants m
+    LEFT JOIN sales_reps s ON m.sales_rep_id = s.id;
   `);
   console.table(merchants.rows);
 
   console.log("\n=== QR LINKS REGISTRY (MULTI-TABLE READY) ===");
   const links = await db.execute(`
-    SELECT l.id, l.merchant_id, l.table_no, l.zone, l.mode, 
+    SELECT l.id, l.merchant_id, l.table_no, l.zone, l.sticker_type, l.mode, 
            COALESCE(NULLIF(l.mode, 'inherit'), m.default_mode, 'direct') as effective_mode,
            l.status, l.scan_count, l.last_scanned_at 
     FROM qr_links l
