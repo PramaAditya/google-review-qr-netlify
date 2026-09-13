@@ -2,114 +2,1832 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Google Review QR Service</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GRQRR Sales Portal</title>
+  
+  <!-- PWA Manifest & Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#18181b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="QR Sales">
+  <link rel="apple-touch-icon" href="/icons/icon.svg">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+
+  <!-- Standalone Offline JS QR Decoder -->
+  <script src="/jsqr.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       background: #f7f6f2;
       color: #18181b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       min-height: 100vh;
-      padding: 1.5rem;
+      padding: 1.25rem 1rem 3rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 460px;
+      width: 100%;
     }
     .card {
       background: #ffffff;
-      max-width: 440px;
-      width: 100%;
-      padding: 2.5rem 2rem;
-      border-radius: 24px;
       border: 2px solid #18181b;
-      box-shadow: 5px 5px 0px #18181b;
-      text-align: center;
-      position: relative;
-    }
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 0.35rem 0.85rem;
-      border-radius: 9999px;
-      background: #dcfce7;
-      color: #166534;
-      border: 1.5px solid #18181b;
-      box-shadow: 2px 2px 0px #18181b;
+      border-radius: 20px;
+      box-shadow: 4px 4px 0px #18181b;
+      padding: 1.5rem;
       margin-bottom: 1.25rem;
     }
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #22c55e;
-      border: 1px solid #18181b;
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
     }
-    h1 {
-      font-size: 1.45rem;
-      font-weight: 800;
-      margin-bottom: 0.5rem;
-      color: #18181b;
+    .brand-title {
+      font-size: 1.2rem;
+      font-weight: 900;
       letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
-    p {
-      color: #52525b;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin-bottom: 1.75rem;
-    }
-    .info-box {
-      background: #f8fafc;
-      border-radius: 14px;
-      padding: 1.1rem;
-      font-size: 0.85rem;
-      color: #334155;
-      text-align: left;
+    .brand-badge {
+      background: #38bdf8;
+      color: #18181b;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
       border: 1.5px solid #18181b;
-      box-shadow: 3px 3px 0px #18181b;
+      box-shadow: 1.5px 1.5px 0px #18181b;
     }
-    .info-box-title {
+    .btn-logout {
+      background: #f4f4f5;
+      border: 1.5px solid #18181b;
+      border-radius: 10px;
+      font-size: 0.75rem;
       font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 0.35rem;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
     }
-    .info-box code {
+    .btn-logout:active {
+      transform: translate(1px, 1px);
+    }
+
+    /* Pitching Demo Banner */
+    .btn-demo-pitch {
+      width: 100%;
+      background: #fef08a;
+      border: 2px solid #18181b;
+      border-radius: 14px;
+      box-shadow: 3px 3px 0px #18181b;
+      color: #18181b;
+      font-weight: 800;
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-demo-pitch:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #18181b;
+    }
+
+    /* Bulk Camera Scanner Button */
+    .btn-camera-scan {
+      width: 100%;
+      background: #38bdf8;
+      border: 2px solid #18181b;
+      border-radius: 14px;
+      box-shadow: 3px 3px 0px #18181b;
+      color: #18181b;
+      font-weight: 800;
+      font-size: 0.9rem;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-camera-scan:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #18181b;
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+    label {
       display: block;
-      margin-top: 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.4rem;
+      color: #3f3f46;
+    }
+    input, select {
+      width: 100%;
       background: #ffffff;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #cbd5e1;
+      border: 1.75px solid #18181b;
+      border-radius: 12px;
+      padding: 0.75rem 0.85rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: #18181b;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input:focus {
+      border-color: #0284c7;
+      box-shadow: 2px 2px 0px #18181b;
+    }
+    .input-with-action {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .input-with-action input {
+      flex: 1;
+      margin-bottom: 0 !important;
+    }
+    .btn-verify-icon {
+      width: 48px;
+      height: 48px;
+      background: #fef08a;
+      border: 2px solid #18181b;
+      border-radius: 12px;
+      box-shadow: 2px 2px 0px #18181b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+    }
+    .btn-verify-icon:active {
+      transform: translate(2px, 2px);
+      box-shadow: 0px 0px 0px #18181b;
+    }
+    .btn-verify-icon.verified {
+      background: #bbf7d0 !important;
+      border-color: #16a34a !important;
+    }
+    .btn-verify-icon.loading {
+      opacity: 0.8;
+      cursor: wait;
+    }
+    .btn-verify-icon:disabled {
+      background: #f4f4f5 !important;
+      border-color: #d4d4d8 !important;
+      box-shadow: none !important;
+      transform: none !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      opacity: 0.45 !important;
+    }
+    .btn-verify-icon:disabled svg {
+      stroke: #a1a1aa !important;
+    }
+    .btn-verify-icon svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+    @keyframes spinVerify {
+      100% { transform: rotate(360deg); }
+    }
+    .spin-verify {
+      animation: spinVerify 0.8s linear infinite;
+    }
+    .maps-verified-card {
+      margin-top: 0.5rem;
+      background: #f0fdf4;
+      border: 1.5px solid #86efac;
+      border-radius: 12px;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .range-sep {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #71717a;
+      text-align: center;
+    }
+
+    /* Mode Selection Cards */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-top: 0.35rem;
+    }
+    .mode-card {
+      background: #ffffff;
+      border: 2px solid #18181b;
+      border-radius: 14px;
+      padding: 0.8rem 0.7rem;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px #18181b;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+    .mode-card.active {
+      background: #dbeafe;
+      border-color: #0284c7;
+      box-shadow: 3px 3px 0px #0284c7;
+    }
+    .mode-name {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #18181b;
+      margin-bottom: 0.25rem;
+    }
+    .mode-desc {
+      font-size: 0.7rem;
+      line-height: 1.35;
+      color: #52525b;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      background: #22c55e;
+      color: #ffffff;
+      border: 2px solid #18181b;
+      border-radius: 14px;
+      padding: 0.9rem;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 3px 3px 0px #18181b;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+    }
+    .btn-primary:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #18181b;
+    }
+    /* Universal Disabled Button State (Neo-brutalist) */
+    button:disabled,
+    input:disabled,
+    select:disabled,
+    .btn-primary:disabled,
+    .btn-camera-scan:disabled,
+    .btn-demo-pitch:disabled,
+    .btn-logout:disabled {
+      background: #e4e4e7 !important;
+      color: #a1a1aa !important;
+      border-color: #d4d4d8 !important;
+      box-shadow: none !important;
+      transform: none !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      opacity: 0.65 !important;
+    }
+
+    /* Scanned Items Pills Tray */
+    .chips-tray {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.5rem;
+      max-height: 120px;
+      overflow-y: auto;
+      padding: 0.5rem;
+      background: #f4f4f5;
+      border: 1.5px solid #18181b;
+      border-radius: 12px;
+    }
+    .chip {
+      background: #ffffff;
+      border: 1.5px solid #18181b;
       border-radius: 8px;
-      color: #0284c7;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: none;
+    }
+    .chip.acrylic {
+      background: #fef9c3;
+      border-color: #854d0e;
+      color: #854d0e;
+    }
+    .chip-del {
+      color: #ef4444;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    /* Summary & Calculator Box */
+    .calc-box {
+      background: #fef08a;
+      border: 2px solid #18181b;
+      border-radius: 14px;
+      padding: 1rem;
+      margin-top: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 2px 2px 0px #18181b;
+    }
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 0.4rem;
+      color: #3f3f46;
+    }
+    .calc-total {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: #18181b;
+      border-top: 1.5px solid #18181b;
+      padding-top: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .comm-note {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #166534;
+      margin-top: 0.4rem;
+      text-align: right;
+    }
+
+    /* Alert Boxes */
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      border: 1.5px solid #18181b;
       font-size: 0.85rem;
       font-weight: 600;
-      word-break: break-all;
+      margin-bottom: 1rem;
     }
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .alert-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    /* Stat Badges */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat-card {
+      background: #f8fafc;
+      border: 1.5px solid #18181b;
+      border-radius: 14px;
+      padding: 0.85rem;
+      box-shadow: 2px 2px 0px #18181b;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .stat-val {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #0f172a;
+      margin-top: 0.2rem;
+    }
+
+    /* =======================================
+       FULLSCREEN LIVE CAMERA SCANNER VIEW
+       ======================================= */
+    #scanner-screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #09090b;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      color: white;
+    }
+    .scanner-header {
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(9, 9, 11, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    .btn-back-scanner {
+      background: #27272a;
+      color: white;
+      border: 1.5px solid #3f3f46;
+      padding: 0.4rem 0.85rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .scanner-count-badge {
+      background: #22c55e;
+      color: #09090b;
+      font-weight: 800;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+    }
+
+    .viewfinder-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #scanner-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .scanner-count-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e4e4e7;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.65rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      pointer-events: none;
+      user-select: none;
+    }
+    .scanner-count-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      display: inline-block;
+      box-shadow: 0 0 6px #22c55e;
+    }
+    .viewfinder-flash.flash-success {
+      background: rgba(34, 197, 94, 0.42); /* emerald green overlay */
+      opacity: 1;
+    }
+    .viewfinder-flash.flash-invalid {
+      background: rgba(239, 68, 68, 0.48); /* crimson red overlay */
+      opacity: 1;
+    }
+    .viewfinder-box {
+      position: absolute;
+      width: 240px;
+      height: 240px;
+      border: 3px solid #38bdf8;
+      border-radius: 20px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+      pointer-events: none;
+      z-index: 5;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .viewfinder-box.box-success {
+      border-color: #22c55e !important;
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.9), 0 0 0 9999px rgba(0, 0, 0, 0.55) !important;
+    }
+    .viewfinder-box.box-invalid {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.9), 0 0 0 9999px rgba(0, 0, 0, 0.55) !important;
+    }
+    .laser-line {
+      position: absolute;
+      top: 0; left: 5%; width: 90%; height: 2px;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+      animation: scanLaser 2s infinite linear;
+    }
+    @keyframes scanLaser {
+      0% { top: 5%; opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { top: 92%; opacity: 0; }
+    }
+
+    .scanner-bottom {
+      background: #18181b;
+      padding: 1.25rem 1rem;
+      border-top: 2px solid #27272a;
+      z-index: 10;
+    }
+    .detected-card {
+      background: #27272a;
+      border: 1.5px solid #3f3f46;
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      animation: fadeIn 0.15s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .detected-info {
+      text-align: left;
+    }
+    .detected-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .detected-sub {
+      font-size: 0.75rem;
+      color: #a1a1aa;
+    }
+    .btn-pick {
+      background: #22c55e;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .btn-pick:active {
+      transform: scale(0.95);
+    }
+    .btn-pick:disabled {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: #a1a1aa !important;
+      border: 1px solid #3f3f46 !important;
+      border-radius: 8px !important;
+      font-size: 0.75rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.04em !important;
+      cursor: default !important;
+      pointer-events: none !important;
+      opacity: 0.7 !important;
+      transform: none !important;
+    }
+    .btn-finish-scan {
+      width: 100%;
+      background: #38bdf8;
+      color: #09090b;
+      border: none;
+      border-radius: 14px;
+      padding: 0.9rem;
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background 0.15s ease, opacity 0.15s ease;
+    }
+    .btn-finish-scan:active {
+      transform: scale(0.98);
+    }
+    .btn-finish-scan:disabled {
+      background: #27272a !important;
+      color: #71717a !important;
+      border: 1.5px solid #3f3f46 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      opacity: 0.55 !important;
+      transform: none !important;
+    }
+
+    /* Modal Pitching Demo */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #ffffff;
+      border: 2px solid #18181b;
+      border-radius: 24px;
+      box-shadow: 6px 6px 0px #18181b;
+      max-width: 400px;
+      width: 100%;
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      position: relative;
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #f4f4f5;
+      border: 1.5px solid #18181b;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .demo-stars {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1.25rem 0;
+    }
+    .demo-star-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+    .demo-star-svg {
+      width: 40px;
+      height: 40px;
+      fill: none;
+      stroke: #71717a;
+      stroke-width: 1.75;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+    .demo-star-svg.filled {
+      fill: #fbbc04;
+      stroke: #e37400;
+    }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="status-pill">
-      <span class="dot"></span>
-      Service Operational
+
+<div class="container">
+
+  <!-- 1. LOGIN SCREEN -->
+  <div id="login-screen" class="card">
+    <div class="brand-header">
+      <div class="brand-title">
+        <span>GRQRR</span>
+        <span class="brand-badge">SALES PWA</span>
+      </div>
     </div>
-    <h1>Google Review QR Service</h1>
-    <p>
-      Layanan pengalihan pintar (*smart redirection*) dan telemetri untuk stiker QR Google Review meja & kasir.
+    <p style="font-size: 0.9rem; color: #52525b; margin-bottom: 1.5rem;">
+      Portal aktivasi cepat stiker & akrilik Google Review untuk sales representatif lapangan.
     </p>
-    <div class="info-box">
-      <div class="info-box-title">Format Scan QR:</div>
-      <code>https://grqrr.netlify.app/:id</code>
+
+    <div id="login-alert" class="alert alert-error hidden"></div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label for="login-phone">Nomor WhatsApp (Username)</label>
+        <input type="tel" id="login-phone" placeholder="Contoh: 081234567890" required inputmode="tel">
+      </div>
+
+      <div class="form-group">
+        <label for="login-pin">PIN Masuk (4 Digit)</label>
+        <input type="password" id="login-pin" placeholder="••••" maxlength="4" required inputmode="numeric">
+      </div>
+
+      <button type="submit" id="btn-login-submit" class="btn-primary" style="background: #18181b;">
+        Masuk ke Dashboard
+      </button>
+    </form>
+  </div>
+
+  <!-- 2. DASHBOARD & ACTIVATION SCREEN -->
+  <div id="app-screen" class="hidden">
+    
+    <!-- Rep Info Card -->
+    <div class="card">
+      <div class="brand-header">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; color: #71717a; text-transform: uppercase;">Sales Representative</div>
+          <div id="rep-name" style="font-size: 1.15rem; font-weight: 900; color: #18181b;">-</div>
+        </div>
+        <button type="button" class="btn-logout" onclick="logout()">Keluar</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Komisi</div>
+          <div id="stat-commission" class="stat-val" style="color: #16a34a;">Rp 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Titik Terpasang</div>
+          <div id="stat-points" class="stat-val">0</div>
+        </div>
+      </div>
+
+      <!-- Pitching Demo Tool Button -->
+      <button type="button" class="btn-demo-pitch" onclick="openDemoModal()">
+        <span>Buka Simulasi Demo Shield (Tunjukkan ke Klien)</span>
+      </button>
+
+    </div>
+
+    <!-- Activation Form Card -->
+    <div class="card">
+      <h2 style="font-size: 1.1rem; font-weight: 900; margin-bottom: 1rem;">Aktivasi Merchant / Bisnis</h2>
+
+      <div id="act-alert" class="alert hidden"></div>
+
+      <form id="activation-form">
+        <!-- Field 1: Link Google Maps Toko (Top Field) -->
+        <div class="form-group">
+          <label for="act-maps">Link Google Maps Toko *</label>
+          <div class="input-with-action">
+            <input type="url" id="act-maps" placeholder="https://maps.app.goo.gl/... atau link Maps" required oninput="onMapsInputChanged()">
+            <button type="button" id="btn-verify-maps" class="btn-verify-icon" onclick="verifyMapsUrl()" title="Verifikasi Link Google Maps & Ambil Nama Toko" disabled>
+              <span id="verify-icon-inner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </span>
+            </button>
+          </div>
+          <div id="maps-verify-badge" class="maps-verified-card hidden"></div>
+          <div style="font-size: 0.72rem; color: #71717a; margin-top: 0.35rem;">
+            Tempel link Bagikan dari aplikasi Google Maps di HP. Ketuk tombol untuk verifikasi & isi nama toko otomatis.
+          </div>
+        </div>
+
+        <!-- Field 2: Nama Bisnis / Toko (Auto-populated from Maps) -->
+        <div class="form-group">
+          <label for="act-merchant">Nama Bisnis / Toko *</label>
+          <input type="text" id="act-merchant" placeholder="Otomatis terisi dari Google Maps atau ketik manual" required>
+        </div>
+
+        <!-- 1. Mode Selection Toggle -->
+        <div class="form-group">
+          <label>Mode Pengalihan Review</label>
+          <div class="mode-grid">
+            <div class="mode-card active" id="mode-shield" onclick="selectMode('shield')">
+              <div class="mode-name">Reputation Shield</div>
+              <div class="mode-desc">Bintang 4-5 ke Google, Bintang 1-3 dicegat ke WA Komplain.</div>
+            </div>
+            <div class="mode-card" id="mode-direct" onclick="selectMode('direct')">
+              <div class="mode-name">Direct Langsung</div>
+              <div class="mode-desc">Semua scan langsung buka form review Google Maps.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. WhatsApp Penanganan Komplain (complaint_whatsapp) -->
+        <div class="form-group">
+          <label for="act-complaint-wa">
+            WhatsApp Penanganan Komplain <span id="label-complaint-req" style="color: #ef4444;">*</span>
+          </label>
+          <input type="tel" id="act-complaint-wa" placeholder="08xxxxxxxxxx (Nomor staf/manajer di lokasi)" required oninput="syncBusinessWa()">
+          <div id="hint-complaint-wa" style="font-size: 0.75rem; color: #b45309; margin-top: 0.3rem;">
+            Wajib diisi untuk mode Shield agar komplain bintang 1-3 masuk ke staf standby di lokasi.
+          </div>
+        </div>
+
+        <!-- Checkbox Auto-sync -->
+        <div class="form-group" style="margin-top: -0.35rem; margin-bottom: 0.85rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; text-transform: none; font-weight: 600; cursor: pointer;">
+            <input type="checkbox" id="same-wa-checkbox" checked onchange="toggleSameWa()" style="width: 18px; height: 18px; accent-color: #18181b; cursor: pointer;">
+            <span>Nomor WhatsApp Bisnis / Owner sama dengan nomor komplain</span>
+          </label>
+        </div>
+
+        <!-- 3. WhatsApp Bisnis / Owner (business_whatsapp) -->
+        <div class="form-group" id="business-wa-group" style="display: none;">
+          <label for="act-business-wa">WhatsApp Bisnis / Owner (Opsional)</label>
+          <input type="tel" id="act-business-wa" placeholder="08xxxxxxxxxx (Untuk laporan mingguan & tagihan)">
+        </div>
+
+        <!-- Pindai Stiker & Akrilik (Kamera Bulk Scanner) -->
+        <div class="form-group" style="border-top: 1.5px dashed #e4e4e7; padding-top: 1.25rem; margin-top: 1.25rem;">
+          <label>Item Stiker & Akrilik yang Dijual *</label>
+          
+          <button type="button" class="btn-camera-scan" onclick="startBulkScanner()" style="margin-bottom: 0.75rem; padding: 0.95rem 1rem; font-size: 0.95rem;">
+            <span>📷 Buka Kamera untuk Pindai Stiker & Akrilik</span>
+          </button>
+
+          <div id="scanned-items-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <span style="font-size: 0.8rem; font-weight: 700; color: #3f3f46;">Item Terpindai: <span id="tray-count" style="color: #0284c7; font-weight: 900;">0</span> item</span>
+              <button type="button" id="btn-clear-tray" style="display: none; background: none; border: none; font-size: 0.75rem; color: #ef4444; font-weight: 700; cursor: pointer;" onclick="clearScannedItems()">Hapus Semua</button>
+            </div>
+            <div class="chips-tray" id="chips-tray">
+              <div id="empty-tray-msg" style="font-size: 0.8rem; color: #71717a; padding: 0.35rem;">Belum ada item dipindai. Ketuk tombol biru di atas untuk menyalakan kamera.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-time Bill & Commission Calculator -->
+        <div class="calc-box">
+          <div class="calc-row">
+            <span id="calc-s-label">Stiker (0 pcs x Rp 10.000):</span>
+            <span id="calc-s-val">Rp 0</span>
+          </div>
+          <div class="calc-row">
+            <span id="calc-a-label">Akrilik (0 pcs x Rp 25.000):</span>
+            <span id="calc-a-val">Rp 0</span>
+          </div>
+          <div class="calc-total">
+            <span>Total Tagihan:</span>
+            <span id="calc-bill-total">Rp 0</span>
+          </div>
+          <div class="comm-note" id="calc-comm-earned">
+            Estimasi Komisi Sales: Rp 0
+          </div>
+        </div>
+
+        <button type="submit" id="btn-activate-submit" class="btn-primary" disabled>
+          Pindai Minimal 1 Item Dahulu
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- 3. FULLSCREEN CAMERA SCANNER VIEW -->
+  <div id="scanner-screen" class="hidden">
+    <div class="scanner-header">
+      <button type="button" class="btn-back-scanner" onclick="stopBulkScanner()">← Batal</button>
+      <div style="font-size: 0.9rem; font-weight: 800;">Pindai Stiker / Akrilik</div>
+      <div class="scanner-count-badge">
+        <span class="scanner-count-dot"></span>
+        <span id="scanner-badge-count">0 Item Terpindai</span>
+      </div>
+    </div>
+
+    <div class="viewfinder-container">
+      <video id="scanner-video" playsinline autoplay muted></video>
+      <canvas id="scanner-canvas" style="display: none;"></canvas>
+      <div id="viewfinder-flash" class="viewfinder-flash"></div>
+      <div class="viewfinder-box" id="viewfinder-box">
+        <div class="laser-line"></div>
+      </div>
+    </div>
+
+    <div class="scanner-bottom">
+      <div id="detected-banner" class="detected-card hidden">
+        <div class="detected-info">
+          <div class="detected-title" id="det-name">Stiker S-42</div>
+          <div class="detected-sub" id="det-sub">Siap ditambahkan</div>
+        </div>
+        <button type="button" class="btn-pick" id="btn-pick-action" onclick="addCurrentDetected()">+ PILIH</button>
+      </div>
+
+      <!-- Scanned Tray inside scanner -->
+      <div id="scanner-tray" style="display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.75rem; margin-bottom: 0.75rem;"></div>
+
+      <button type="button" class="btn-finish-scan" onclick="finishBulkScanner()" disabled>
+        Selesai Scan (<span id="btn-finish-count">0</span> Item) >
+      </button>
     </div>
   </div>
+
+  <!-- 4. PITCHING SIMULATION MODAL -->
+  <div id="demo-modal" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <button type="button" class="modal-close" onclick="closeDemoModal()">×</button>
+      
+      <div id="demo-stage-rating">
+        <div style="font-size: 0.75rem; font-weight: 700; background: #fef08a; border: 1.5px solid #18181b; padding: 0.2rem 0.6rem; border-radius: 9999px; display: inline-block; margin-bottom: 0.75rem;">
+          SIMULASI MEJA 01
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 900; margin-bottom: 0.35rem;">Ulas Pengalaman Anda</h3>
+        <p style="font-size: 0.85rem; color: #52525b; margin-bottom: 1.25rem;">Bagaimana kepuasan Anda hari ini?</p>
+
+        <!-- Hollow stars interactive -->
+        <div class="demo-stars">
+          <button type="button" class="demo-star-btn" onclick="triggerDemoRating(1)">
+            <svg class="demo-star-svg" id="dstar-1" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button type="button" class="demo-star-btn" onclick="triggerDemoRating(2)">
+            <svg class="demo-star-svg" id="dstar-2" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button type="button" class="demo-star-btn" onclick="triggerDemoRating(3)">
+            <svg class="demo-star-svg" id="dstar-3" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button type="button" class="demo-star-btn" onclick="triggerDemoRating(4)">
+            <svg class="demo-star-svg" id="dstar-4" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+          <button type="button" class="demo-star-btn" onclick="triggerDemoRating(5)">
+            <svg class="demo-star-svg" id="dstar-5" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          </button>
+        </div>
+        <p style="font-size: 0.75rem; color: #71717a;">Minta klien ketuk bintang di atas untuk melihat cara kerjanya</p>
+      </div>
+
+      <!-- Apology View -->
+      <div id="demo-stage-apology" class="hidden">
+        <img src="/images/apology.jpg" style="width: 130px; height: 130px; object-fit: contain; margin: 0 auto 0.5rem auto; display: block;" alt="Karakter Maaf">
+        <h4 style="font-size: 1.1rem; font-weight: 900; margin-bottom: 0.35rem;">Mohon Maaf Atas Ketidaknyamanan</h4>
+        <p style="font-size: 0.8rem; color: #52525b; margin-bottom: 1rem;">
+          Komplain tamu langsung dicegat di sini dan tidak sampai ke Google Maps!
+        </p>
+        <div style="background: #22c55e; color: white; padding: 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 800; border: 1.5px solid #18181b; box-shadow: 2px 2px 0 #18181b;">
+          Hubungi Manager via WhatsApp
+        </div>
+        <div style="margin-top: 0.75rem;">
+          <button type="button" style="background: none; border: none; text-decoration: underline; color: #71717a; font-size: 0.75rem; cursor: pointer;" onclick="resetDemoRating()">
+            Coba simulasi bintang lagi
+          </button>
+        </div>
+      </div>
+
+      <!-- Positive Forward View -->
+      <div id="demo-stage-positive" class="hidden">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⭐</div>
+        <h4 style="font-size: 1.1rem; font-weight: 900; color: #16a34a; margin-bottom: 0.35rem;">Puas Bintang 4 / 5!</h4>
+        <p style="font-size: 0.85rem; color: #52525b; margin-bottom: 1rem;">
+          Pengunjung langsung diarahkan 100% otomatis ke form Google Review toko Anda untuk menambah ulasan bintang 5 publik!
+        </p>
+        <button type="button" class="btn-primary" style="background: #18181b; font-size: 0.85rem;" onclick="resetDemoRating()">
+          Coba Bintang Lain
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var currentUser = null;
+  var currentPricing = { price_vinyl_table: 10000, price_acrylic_cashier: 25000 };
+  var currentSelectedMode = 'shield';
+
+  // Scanned items collection
+  var scannedItems = new Set();
+  var currentDetectedId = null;
+  var scannerStream = null;
+  var scannerAnimId = null;
+  var lastAddedId = null;
+  var lastAddedTime = 0;
+
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js').catch(function(err) {
+        console.log('SW registration failed:', err);
+      });
+    });
+  }
+
+  function formatRp(num) {
+    return 'Rp ' + (num || 0).toLocaleString('id-ID');
+  }
+
+  // Audio & Haptic Feedback
+  function playBeep() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880; // A5 pitch
+      gain.gain.value = 0.1;
+      osc.start();
+      setTimeout(function() { osc.stop(); ctx.close(); }, 80);
+    } catch (e) {}
+  }
+  function playErrorTone() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sawtooth";
+      osc.frequency.value = 220;
+      gain.gain.value = 0.15;
+      osc.start();
+      setTimeout(function() { osc.stop(); ctx.close(); }, 160);
+    } catch (e) {}
+  }
+
+
+  function triggerHaptic() {
+    if (navigator.vibrate) {
+      try { navigator.vibrate(50); } catch(e){}
+    }
+  }
+  var flashTimer = null;
+  function triggerScannerFlash(type) {
+    var flashEl = document.getElementById('viewfinder-flash');
+    var boxEl = document.getElementById('viewfinder-box');
+    if (!flashEl || !boxEl) return;
+
+    if (flashTimer) clearTimeout(flashTimer);
+
+    flashEl.classList.remove('flash-success', 'flash-invalid');
+    boxEl.classList.remove('box-success', 'box-invalid');
+
+    // Force DOM reflow to re-trigger transition
+    void flashEl.offsetWidth;
+
+    if (type === 'success') {
+      flashEl.classList.add('flash-success');
+      boxEl.classList.add('box-success');
+    } else {
+      flashEl.classList.add('flash-invalid');
+      boxEl.classList.add('box-invalid');
+    }
+
+    flashTimer = setTimeout(function() {
+      flashEl.classList.remove('flash-success', 'flash-invalid');
+      boxEl.classList.remove('box-success', 'box-invalid');
+    }, 450);
+  }
+
+
+  function initApp() {
+    var stored = localStorage.getItem('grqrr_sales_user');
+    if (stored) {
+      try {
+        currentUser = JSON.parse(stored);
+        showDashboard();
+      } catch (e) {
+        logout();
+      }
+    }
+  }
+
+  function showDashboard() {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app-screen').classList.remove('hidden');
+    
+    document.getElementById('rep-name').textContent = currentUser.name + ' (' + currentUser.phone + ')';
+    if (currentUser.summary) {
+      document.getElementById('stat-commission').textContent = formatRp(currentUser.summary.total_commission_idr);
+      var totalPts = (currentUser.summary.table_stickers || 0) + (currentUser.summary.cashier_acrylics || 0);
+      document.getElementById('stat-points').textContent = totalPts + ' Titik';
+    }
+    if (currentUser.pricing) {
+      currentPricing = currentUser.pricing;
+    }
+    calcTotals();
+  }
+
+  function logout() {
+    localStorage.removeItem('grqrr_sales_user');
+    currentUser = null;
+    document.getElementById('app-screen').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+  }
+
+  function toggleSameWa() {
+    var isSame = document.getElementById('same-wa-checkbox').checked;
+    var group = document.getElementById('business-wa-group');
+    if (isSame) {
+      group.style.display = 'none';
+      document.getElementById('act-business-wa').value = document.getElementById('act-complaint-wa').value;
+    } else {
+      group.style.display = 'block';
+    }
+  }
+  var resolvedDirectReviewUrl = null;
+
+  function onMapsInputChanged() {
+    resolvedDirectReviewUrl = null;
+    var badge = document.getElementById('maps-verify-badge');
+    var btn = document.getElementById('btn-verify-maps');
+    var iconInner = document.getElementById('verify-icon-inner');
+    if (badge) badge.classList.add('hidden');
+    var hasValue = input && input.value && input.value.trim().length > 0;
+    if (btn) {
+      btn.classList.remove('verified', 'loading');
+      btn.style.background = hasValue ? '#fef08a' : '';
+      btn.disabled = !hasValue;
+    }
+    if (iconInner) {
+      iconInner.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>';
+    }
+  }
+
+  async function verifyMapsUrl() {
+    var input = document.getElementById('act-maps');
+    var btn = document.getElementById('btn-verify-maps');
+    var iconInner = document.getElementById('verify-icon-inner');
+    var badge = document.getElementById('maps-verify-badge');
+    var alertEl = document.getElementById('act-alert');
+    var merchantNameInput = document.getElementById('act-merchant');
+
+    var rawUrl = (input.value || '').trim();
+    if (!rawUrl) {
+      alertEl.textContent = 'Masukkan link Google Maps toko terlebih dahulu.';
+      alertEl.className = 'alert alert-error';
+      alertEl.classList.remove('hidden');
+      input.focus();
+      return;
+    }
+
+    alertEl.classList.add('hidden');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    iconInner.innerHTML = '<svg class="spin-verify" viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2.5"><circle cx="12" cy="12" r="9" stroke-dasharray="32" stroke-dashoffset="12"/></svg>';
+
+    try {
+      var res = await fetch('/api/sales/resolve-maps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: rawUrl })
+      });
+
+      var resJson = await res.json();
+      if (!res.ok || !resJson.success) {
+        throw new Error(resJson.error || 'Link Google Maps tidak valid.');
+      }
+
+      var data = resJson.data;
+      resolvedDirectReviewUrl = data.directReviewUrl;
+
+      // Auto-populate Merchant Name from verified Google Maps data
+      if (data.name) {
+        merchantNameInput.value = data.name;
+        merchantNameInput.style.borderColor = '#16a34a';
+        merchantNameInput.style.backgroundColor = '#f0fdf4';
+        setTimeout(function() {
+          merchantNameInput.style.borderColor = '';
+          merchantNameInput.style.backgroundColor = '';
+        }, 1600);
+      }
+
+      // Success UI update
+      btn.classList.remove('loading');
+      btn.classList.add('verified');
+      btn.disabled = false;
+      iconInner.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+      playBeep();
+      triggerHaptic();
+
+      badge.innerHTML = '<div style="flex: 1; min-width: 0;">' +
+        '<div><strong style="color: #15803d;">✓ Terverifikasi:</strong> <span style="font-weight: 800; color: #18181b;">' + (data.name || 'Lokasi Terdeteksi') + '</span></div>' +
+        (data.address ? '<div style="font-size: 0.72rem; color: #52525b; margin-top: 0.2rem; line-height: 1.35;">' + data.address + '</div>' : '') +
+        (data.placeId ? '<div style="margin-top: 0.3rem;"><code style="background: #dcfce7; color: #166534; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">Place ID: ' + data.placeId + '</code></div>' : '') +
+        '</div>' +
+        '<a href="' + data.directReviewUrl + '" target="_blank" rel="noopener" style="color: #15803d; font-weight: 800; text-decoration: underline; flex-shrink: 0; padding-left: 0.6rem; font-size: 0.8rem;">Uji Buka ↗</a>';
+      badge.classList.remove('hidden');
+
+    } catch (err) {
+      btn.classList.remove('loading', 'verified');
+      btn.disabled = false;
+      btn.style.background = '#fef08a';
+      iconInner.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      
+      playErrorTone();
+      alertEl.textContent = err.message || 'Gagal memverifikasi link Google Maps.';
+      alertEl.className = 'alert alert-error';
+      alertEl.classList.remove('hidden');
+      if (badge) badge.classList.add('hidden');
+    }
+  }
+
+
+  function syncBusinessWa() {
+    if (document.getElementById('same-wa-checkbox').checked) {
+      document.getElementById('act-business-wa').value = document.getElementById('act-complaint-wa').value;
+    }
+  }
+
+  function selectMode(mode) {
+    currentSelectedMode = mode;
+    document.getElementById('mode-shield').classList.toggle('active', mode === 'shield');
+    document.getElementById('mode-direct').classList.toggle('active', mode === 'direct');
+
+    var reqSpan = document.getElementById('label-complaint-req');
+    var hintEl = document.getElementById('hint-complaint-wa');
+    var input = document.getElementById('act-complaint-wa');
+    if (mode === 'shield') {
+      reqSpan.textContent = '*';
+      reqSpan.style.color = '#ef4444';
+      hintEl.style.display = 'block';
+      input.required = true;
+    } else {
+      reqSpan.textContent = '(Opsional)';
+      reqSpan.style.color = '#71717a';
+      hintEl.style.display = 'none';
+      input.required = false;
+    }
+  }
+
+  // Pitching Demo Functions
+  function openDemoModal() {
+    resetDemoRating();
+    document.getElementById('demo-modal').classList.remove('hidden');
+  }
+
+  function closeDemoModal() {
+    document.getElementById('demo-modal').classList.add('hidden');
+  }
+
+  function resetDemoRating() {
+    document.getElementById('demo-stage-rating').classList.remove('hidden');
+    document.getElementById('demo-stage-apology').classList.add('hidden');
+    document.getElementById('demo-stage-positive').classList.add('hidden');
+    for (var i = 1; i <= 5; i++) {
+      document.getElementById('dstar-' + i).classList.remove('filled');
+    }
+  }
+
+  function triggerDemoRating(star) {
+    for (var i = 1; i <= 5; i++) {
+      var el = document.getElementById('dstar-' + i);
+      if (i <= star) {
+        el.classList.add('filled');
+      } else {
+        el.classList.remove('filled');
+      }
+    }
+    setTimeout(function() {
+      document.getElementById('demo-stage-rating').classList.add('hidden');
+      if (star <= 3) {
+        document.getElementById('demo-stage-apology').classList.remove('hidden');
+      } else {
+        document.getElementById('demo-stage-positive').classList.remove('hidden');
+      }
+    }, 220);
+  }
+
+  // Handle Login
+  document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var alertEl = document.getElementById('login-alert');
+    var btn = document.getElementById('btn-login-submit');
+    alertEl.classList.add('hidden');
+
+    var phone = document.getElementById('login-phone').value;
+    var pin = document.getElementById('login-pin').value;
+
+    btn.disabled = true;
+    btn.textContent = 'Memverifikasi...';
+
+    try {
+      var res = await fetch('/api/sales/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone, pin: pin })
+      });
+      var data = await res.json();
+
+      if (!res.ok || data.error) {
+        alertEl.textContent = data.error || 'Login gagal';
+        alertEl.classList.remove('hidden');
+      } else {
+        currentUser = {
+          id: data.salesRep.id,
+          name: data.salesRep.name,
+          phone: data.salesRep.phone,
+          pin: pin,
+          commission_table: data.salesRep.commission_table,
+          commission_cashier: data.salesRep.commission_cashier,
+          summary: data.summary,
+          pricing: data.pricing
+        };
+        localStorage.setItem('grqrr_sales_user', JSON.stringify(currentUser));
+        showDashboard();
+      }
+    } catch (err) {
+      alertEl.textContent = 'Terjadi gangguan koneksi internet.';
+      alertEl.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Masuk ke Dashboard';
+    }
+  });
+
+  // ==========================================
+  // BULK CAMERA SCANNER ENGINE
+  // ==========================================
+  function parseScannedQrText(text) {
+    if (!text) return null;
+    var trimmed = text.trim();
+    // Match URL or direct code: .../S-42, .../A-12, or just S-42, a0012
+    var match = trimmed.match(/(?:^|\/)([SA])-?0*(\d+)$/i);
+    if (match) {
+      var prefix = match[1].toUpperCase();
+      var num = parseInt(match[2], 10);
+      return prefix + '-' + num;
+    }
+    return null;
+  }
+
+  var isScannerPaused = false;
+  var isStatusChecking = false;
+  var candidateText = null;
+  var candidateHits = 0;
+  var REQUIRED_CANDIDATE_HITS = 2;
+  var nativeBarcodeDetector = null;
+
+  if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+    try {
+      nativeBarcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+    } catch (e) {}
+  }
+
+  async function startBulkScanner() {
+    document.getElementById('scanner-screen').classList.remove('hidden');
+    updateScannerTray();
+
+    isScannerPaused = false;
+    isStatusChecking = false;
+    candidateText = null;
+    candidateHits = 0;
+
+    try {
+      scannerStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      var video = document.getElementById('scanner-video');
+      video.srcObject = scannerStream;
+      video.setAttribute('playsinline', true);
+      video.play();
+      scannerAnimId = requestAnimationFrame(scanFrame);
+    } catch (err) {
+      alert('Tidak dapat mengakses kamera: ' + (err.message || 'Periksa izin kamera.'));
+      stopBulkScanner();
+    }
+  }
+
+  function stopBulkScanner() {
+    if (scannerAnimId) {
+      cancelAnimationFrame(scannerAnimId);
+      scannerAnimId = null;
+    }
+    if (scannerStream) {
+      scannerStream.getTracks().forEach(function(track) { track.stop(); });
+      scannerStream = null;
+    }
+    isScannerPaused = false;
+    isStatusChecking = false;
+    candidateText = null;
+    candidateHits = 0;
+    document.getElementById('scanner-screen').classList.add('hidden');
+    document.getElementById('detected-banner').classList.add('hidden');
+    currentDetectedId = null;
+  }
+  function finishBulkScanner() {
+    stopBulkScanner();
+    renderScannedItemsForm();
+    calcTotals();
+  }
+
+  async function scanFrame() {
+    if (!scannerStream) return;
+    var video = document.getElementById('scanner-video');
+    var canvas = document.getElementById('scanner-canvas');
+
+    if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      scannerAnimId = requestAnimationFrame(scanFrame);
+      return;
+    }
+
+    // If paused (e.g. just added an item or checking status), keep loop running but skip decoding
+    if (isScannerPaused || isStatusChecking) {
+      scannerAnimId = requestAnimationFrame(scanFrame);
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    var ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    var rawQrData = null;
+    var foundCode = null;
+
+    // 1. High-Performance Hardware Accelerated BarcodeDetector (Modern Android Chrome)
+    if (nativeBarcodeDetector) {
+      try {
+        var barcodes = await nativeBarcodeDetector.detect(canvas);
+        if (barcodes && barcodes.length > 0) {
+          // When multiple QR codes are in frame, pick the one CLOSEST to the center viewfinder box!
+          var centerX = canvas.width / 2;
+          var centerY = canvas.height / 2;
+          var closest = barcodes[0];
+          var minDistance = Infinity;
+
+          for (var i = 0; i < barcodes.length; i++) {
+            var b = barcodes[i];
+            var box = b.boundingBox;
+            var bx = box.x + box.width / 2;
+            var by = box.y + box.height / 2;
+            var dist = Math.hypot(bx - centerX, by - centerY);
+            if (dist < minDistance) {
+              minDistance = dist;
+              closest = b;
+            }
+          }
+
+          if (closest && closest.rawValue) {
+            rawQrData = closest.rawValue;
+            foundCode = parseScannedQrText(rawQrData);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 2. Fallback to jsQR with SPATIAL RETICLE CROPPING
+    // Cropping to the central ~52% of the frame isolates the reticle and ignores outside stickers
+    if (!rawQrData && typeof jsQR !== 'undefined') {
+      var cropSize = Math.floor(Math.min(canvas.width, canvas.height) * 0.52);
+      var cropX = Math.floor((canvas.width - cropSize) / 2);
+      var cropY = Math.floor((canvas.height - cropSize) / 2);
+
+      var imageData = ctx.getImageData(cropX, cropY, cropSize, cropSize);
+      var qrResult = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert'
+      });
+
+      if (qrResult && qrResult.data) {
+        rawQrData = qrResult.data;
+        foundCode = parseScannedQrText(rawQrData);
+      }
+    }
+
+    // 3. Multi-frame candidate stabilization (eliminates 1-frame jitter and rapid flipping)
+    if (rawQrData) {
+      if (rawQrData === candidateText) {
+        candidateHits++;
+      } else {
+        candidateText = rawQrData;
+        candidateHits = 1;
+      }
+
+      if (candidateHits >= REQUIRED_CANDIDATE_HITS) {
+        if (foundCode) {
+          await handleQrDetected(foundCode);
+        } else {
+          handleInvalidQrDetected(rawQrData);
+        }
+      }
+    } else {
+      if (candidateHits > 0) candidateHits--;
+      if (candidateHits === 0) candidateText = null;
+    }
+
+    scannerAnimId = requestAnimationFrame(scanFrame);
+  }
+
+  var lastInvalidAlertTime = 0;
+  function handleInvalidQrDetected(rawText) {
+    currentDetectedId = null;
+    var banner = document.getElementById('detected-banner');
+    var titleEl = document.getElementById('det-name');
+    var subEl = document.getElementById('det-sub');
+    var pickBtn = document.getElementById('btn-pick-action');
+
+    banner.classList.remove('hidden');
+    banner.style.borderColor = '#ef4444';
+    banner.style.background = 'rgba(239, 68, 68, 0.2)';
+
+    titleEl.textContent = '❌ QR Code Tidak Valid';
+    titleEl.style.color = '#f87171';
+
+    var preview = rawText.length > 28 ? rawText.slice(0, 26) + '...' : rawText;
+    subEl.textContent = 'Bukan stiker S-[N] atau akrilik A-[N] (' + preview + ')';
+    subEl.style.color = '#fca5a5';
+
+    pickBtn.disabled = true;
+    pickBtn.textContent = 'DIABAIKAN';
+    pickBtn.style.background = '#4b5563';
+
+    var now = Date.now();
+    if (now - lastInvalidAlertTime > 1200) {
+      lastInvalidAlertTime = now;
+      playErrorTone();
+      triggerHaptic();
+      triggerScannerFlash('invalid');
+    }
+  }
+
+  var activeCodeCache = {};
+  async function checkCodeStatus(codeId) {
+    if (activeCodeCache[codeId] !== undefined) return activeCodeCache[codeId];
+    try {
+      var res = await fetch('/api/sales/check?id=' + encodeURIComponent(codeId));
+      var data = await res.json();
+      activeCodeCache[codeId] = data;
+      return data;
+    } catch (e) {
+      return { exists: false, is_active: false };
+    }
+  }
+
+  async function handleQrDetected(codeId) {
+    currentDetectedId = codeId;
+    var banner = document.getElementById('detected-banner');
+    var titleEl = document.getElementById('det-name');
+    var subEl = document.getElementById('det-sub');
+    var pickBtn = document.getElementById('btn-pick-action');
+
+    banner.classList.remove('hidden');
+    banner.style.borderColor = '#3f3f46';
+    banner.style.background = '#27272a';
+    titleEl.style.color = '#ffffff';
+
+    var isCashier = codeId.startsWith('A-');
+    var labelName = isCashier ? 'Akrilik ' + codeId : 'Stiker ' + codeId;
+    titleEl.textContent = labelName;
+
+    // 1. Check if already in cart
+    if (scannedItems.has(codeId)) {
+      subEl.textContent = 'Sudah masuk keranjang';
+      subEl.style.color = '#f59e0b';
+      pickBtn.disabled = true;
+      pickBtn.style.background = '#4b5563';
+      pickBtn.textContent = 'TERPILIH';
+      return;
+    }
+
+    // 2. Check if already active in database (prevent overwrite!)
+    isStatusChecking = true;
+    var statusInfo = await checkCodeStatus(codeId);
+    isStatusChecking = false;
+
+    // If target changed while awaiting response, abort this stale result
+    if (currentDetectedId !== codeId) return;
+
+    if (statusInfo.is_active) {
+      banner.style.borderColor = '#f59e0b';
+      banner.style.background = 'rgba(245, 158, 11, 0.2)';
+      titleEl.textContent = '⚠️ ' + labelName + ' Sudah Aktif!';
+      titleEl.style.color = '#fbbf24';
+      subEl.textContent = 'Terpasang di ' + (statusInfo.merchant_name || 'merchant lain') + '. Tidak dapat ditimpa.';
+      subEl.style.color = '#fde68a';
+      pickBtn.disabled = true;
+      pickBtn.style.background = '#4b5563';
+      pickBtn.textContent = 'SUDAH TERPAKAI';
+
+      var now = Date.now();
+      if (now - lastInvalidAlertTime > 1500) {
+        lastInvalidAlertTime = now;
+        playErrorTone();
+        triggerHaptic();
+        triggerScannerFlash('invalid');
+      }
+      return;
+    }
+
+    // 3. Fresh unassigned item -> ready to add
+    subEl.textContent = 'Ditemukan! Siap ditambahkan';
+    subEl.style.color = '#a1a1aa';
+    pickBtn.disabled = false;
+    pickBtn.style.background = '#22c55e';
+    pickBtn.textContent = '+ PILIH';
+
+    // Auto-add debounce
+    var now = Date.now();
+    if (lastAddedId !== codeId || now - lastAddedTime > 1500) {
+      lastAddedId = codeId;
+      lastAddedTime = now;
+      addCurrentDetected();
+    }
+  }
+
+  function addCurrentDetected() {
+    if (!currentDetectedId) return;
+    if (!scannedItems.has(currentDetectedId)) {
+      var addedCode = currentDetectedId;
+      scannedItems.add(addedCode);
+      playBeep();
+      triggerHaptic();
+      triggerScannerFlash('success');
+      updateScannerTray();
+      handleQrDetected(addedCode);
+
+      // Pause scanner briefly (650ms) to ensure calm, smooth addition without flipping
+      isScannerPaused = true;
+      candidateText = null;
+      candidateHits = 0;
+      setTimeout(function() {
+        isScannerPaused = false;
+      }, 650);
+    }
+  }
+
+  function removeScannedItem(id) {
+    scannedItems.delete(id);
+    updateScannerTray();
+    renderScannedItemsForm();
+    calcTotals();
+  }
+
+  function clearScannedItems() {
+    scannedItems.clear();
+    renderScannedItemsForm();
+    calcTotals();
+  }
+
+  function updateScannerTray() {
+    var count = scannedItems.size;
+    var badgeEl = document.getElementById('scanner-badge-count');
+    if (badgeEl) badgeEl.textContent = count + ' Item Terpindai';
+    document.getElementById('btn-finish-count').textContent = count;
+    var finishBtn = document.querySelector('.btn-finish-scan');
+    if (finishBtn) finishBtn.disabled = (count === 0);
+
+    var tray = document.getElementById('scanner-tray');
+    tray.innerHTML = '';
+    scannedItems.forEach(function(item) {
+      var isAcrylic = item.startsWith('A-');
+      var chip = document.createElement('div');
+      chip.style.cssText = 'background: rgba(255, 255, 255, 0.08); color: ' + (isAcrylic ? '#fde047' : '#e4e4e7') + '; border: 1px solid ' + (isAcrylic ? '#ca8a04' : '#3f3f46') + '; border-radius: 8px; padding: 0.25rem 0.6rem; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; user-select: none;';
+      chip.innerHTML = (isAcrylic ? '🏷️ ' : '📌 ') + item + ' <span onclick="removeScannedItem(\'' + item + '\')" style="color:#ef4444; cursor:pointer; font-size:0.95rem; font-weight:900; margin-left:0.15rem; padding:0 0.15rem;" title="Hapus">&times;</span>';
+      tray.appendChild(chip);
+    });
+  }
+
+  function renderScannedItemsForm() {
+    var tray = document.getElementById('chips-tray');
+    var countEl = document.getElementById('tray-count');
+    var clearBtn = document.getElementById('btn-clear-tray');
+    var count = scannedItems.size;
+
+    countEl.textContent = count;
+    tray.innerHTML = '';
+
+    if (count > 0) {
+      if (clearBtn) clearBtn.style.display = 'inline-block';
+      scannedItems.forEach(function(item) {
+        var isAcrylic = item.startsWith('A-');
+        var chip = document.createElement('div');
+        chip.className = 'chip' + (isAcrylic ? ' acrylic' : '');
+        chip.innerHTML = item + ' <span class="chip-del" onclick="removeScannedItem(\'' + item + '\')">&times;</span>';
+        tray.appendChild(chip);
+      });
+    } else {
+      if (clearBtn) clearBtn.style.display = 'none';
+      tray.innerHTML = '<div id="empty-tray-msg" style="font-size: 0.8rem; color: #71717a; padding: 0.35rem;">Belum ada item dipindai. Ketuk tombol biru di atas untuk menyalakan kamera.</div>';
+    }
+  }
+
+  // ==========================================
+  // CALCULATOR & FORM LOGIC
+  // ==========================================
+  function calcTotals() {
+    var scanSQty = 0;
+    var scanAQty = 0;
+    scannedItems.forEach(function(id) {
+      if (id.startsWith('A-')) scanAQty++;
+      else scanSQty++;
+    });
+
+    var sPrice = currentPricing.price_vinyl_table || 10000;
+    var aPrice = currentPricing.price_acrylic_cashier || 25000;
+    var sComm = currentUser ? (currentUser.commission_table || 3000) : 3000;
+    var aComm = currentUser ? (currentUser.commission_cashier || 7000) : 7000;
+
+    var sSubtotal = scanSQty * sPrice;
+    var aSubtotal = scanAQty * aPrice;
+    var grandTotal = sSubtotal + aSubtotal;
+    var totalComm = (scanSQty * sComm) + (scanAQty * aComm);
+
+    document.getElementById('calc-s-label').textContent = 'Stiker (' + scanSQty + ' pcs x ' + formatRp(sPrice) + '):';
+    document.getElementById('calc-s-val').textContent = formatRp(sSubtotal);
+
+    document.getElementById('calc-a-label').textContent = 'Akrilik (' + scanAQty + ' pcs x ' + formatRp(aPrice) + '):';
+    document.getElementById('calc-a-val').textContent = formatRp(aSubtotal);
+
+    document.getElementById('calc-bill-total').textContent = formatRp(grandTotal);
+    document.getElementById('calc-comm-earned').textContent = 'Estimasi Komisi Sales: ' + formatRp(totalComm);
+    var actBtn = document.getElementById('btn-activate-submit');
+    if (actBtn) {
+      if (scannedItems.size === 0) {
+        actBtn.disabled = true;
+        actBtn.textContent = 'Pindai Minimal 1 Item Dahulu';
+      } else {
+        actBtn.disabled = false;
+        actBtn.textContent = 'Aktifkan Sekarang (' + scannedItems.size + ' Titik)';
+      }
+    }
+  }
+
+  // Handle Activation Submit
+  document.getElementById('activation-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var alertEl = document.getElementById('act-alert');
+    var btn = document.getElementById('btn-activate-submit');
+    alertEl.className = 'alert hidden';
+
+    var merchantName = document.getElementById('act-merchant').value;
+    var mapsUrl = resolvedDirectReviewUrl || document.getElementById('act-maps').value.trim();
+    var complaintWa = document.getElementById('act-complaint-wa').value;
+    var businessWa = document.getElementById('act-business-wa').value || complaintWa;
+
+    if (currentSelectedMode === 'shield' && !complaintWa) {
+      alertEl.textContent = 'WhatsApp Penanganan Komplain wajib diisi jika mode Reputation Shield aktif.';
+      alertEl.className = 'alert alert-error';
+      return;
+    }
+
+    if (scannedItems.size === 0) {
+      alertEl.textContent = 'Harap pindai minimal satu stiker atau akrilik menggunakan kamera terlebih dahulu.';
+      alertEl.className = 'alert alert-error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Mengaktifkan Titik di Turso...';
+
+    try {
+      var payload = {
+        phone: currentUser.phone,
+        pin: currentUser.pin,
+        merchant_name: merchantName,
+        maps_url: mapsUrl,
+        complaint_whatsapp: complaintWa || null,
+        business_whatsapp: businessWa || null,
+        mode: currentSelectedMode,
+        items: Array.from(scannedItems)
+      };
+
+      var res = await fetch('/api/sales/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      var data = await res.json();
+
+      if (!res.ok || data.error) {
+        alertEl.textContent = data.error || 'Gagal aktivasi';
+        alertEl.className = 'alert alert-error';
+      } else {
+        alertEl.innerHTML = '<strong>' + data.message + '</strong><br>' +
+                            'Tagihan: ' + formatRp(data.summary.bill_total_idr) + ' | ' +
+                            'Komisi Anda: ' + formatRp(data.summary.commission_earned_idr) + '<br>' +
+                            '<span style="font-size:0.75rem; color:#166534;">ID: ' + data.summary.activated_ids.join(', ') + '</span>';
+        alertEl.className = 'alert alert-success';
+
+        // Update local stats
+        if (currentUser.summary) {
+          currentUser.summary.table_stickers = (currentUser.summary.table_stickers || 0) + (data.summary.table_stickers || 0);
+          currentUser.summary.cashier_acrylics = (currentUser.summary.cashier_acrylics || 0) + (data.summary.cashier_acrylics || 0);
+          currentUser.summary.total_commission_idr = (currentUser.summary.total_commission_idr || 0) + (data.summary.commission_earned_idr || 0);
+          localStorage.setItem('grqrr_sales_user', JSON.stringify(currentUser));
+          showDashboard();
+        }
+
+        clearScannedItems();
+        document.getElementById('act-business-wa').value = '';
+        document.getElementById('same-wa-checkbox').checked = true;
+        toggleSameWa();
+        resolvedDirectReviewUrl = null;
+        onMapsInputChanged();
+        document.getElementById('s-from').value = '';
+        document.getElementById('s-to').value = '';
+        document.getElementById('a-from').value = '';
+        document.getElementById('a-to').value = '';
+        clearScannedItems();
+      }
+    } catch (err) {
+      alertEl.textContent = 'Terjadi kesalahan jaringan.';
+      alertEl.className = 'alert alert-error';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Aktifkan Sekarang';
+    }
+  });
+
+  initApp();
+</script>
+
 </body>
 </html>

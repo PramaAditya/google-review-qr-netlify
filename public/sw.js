@@ -1,7 +1,8 @@
-const CACHE_NAME = "grqrr-sales-v2";
+const CACHE_NAME = "grqrr-sales-v3";
 const ASSETS_TO_CACHE = [
-  "/sales",
-  "/sales/jsqr.min.js",
+  "/",
+  "/index.html",
+  "/jsqr.min.js",
   "/manifest.json",
   "/icons/icon.svg",
   "/favicon.ico"
@@ -54,7 +55,7 @@ self.addEventListener("fetch", (event) => {
       })
       .catch(() => {
         return caches.match(event.request).then((cached) => {
-          return cached || caches.match("/sales");
+          return cached || caches.match("/");
         });
       })
   );

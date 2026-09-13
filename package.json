@@ -5,7 +5,8 @@
   "scripts": {
     "build": "echo 'Built Netlify functions'",
     "db:migrate": "bun scripts/migrate.ts",
-    "db:seed": "bun scripts/seed.ts"
+    "db:seed": "bun scripts/seed.ts",
+    "test": "bun test --timeout 15000"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

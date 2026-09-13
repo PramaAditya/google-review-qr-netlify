@@ -1,7 +1,8 @@
 {
   "name": "GRQRR Sales Portal",
   "short_name": "QR Sales",
-  "start_url": "/sales/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f7f6f2",
   "theme_color": "#18181b",
