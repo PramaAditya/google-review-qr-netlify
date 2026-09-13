@@ -26,33 +26,33 @@ describe("Google Review QR Redirect Function (Canonical S-[N] and A-[N])", () =>
     expect(normalizeQrId("A-0012")).toBe("A-12");
   });
 
-  it("serves Reputation Shield micro-rating page for 'S-1' (Meja 01, inherit)", async () => {
-    const req = new Request("https://grqrr.netlify.app/S-1", {
+  it("serves Reputation Shield micro-rating page for 'S-100' (Meja 100, inherit)", async () => {
+    const req = new Request("https://grqrr.netlify.app/S-100", {
       headers: {
         "x-nf-client-connection-ip": "114.124.200.2",
         "user-agent": "Mozilla/5.0 (Android 14; Mobile)",
       },
     });
 
-    const res = await handler(req, { params: { id: "S-1" } } as any);
+    const res = await handler(req, { params: { id: "S-100" } } as any);
 
     expect(res.status).toBe(200);
     const html = await res.text();
     expect(html).toContain("Ulas Pengalaman Anda");
-    expect(html).toContain("Lalana Space - Meja 1");
-    expect(html).toContain("Meja 01");
+    expect(html).toContain("Lalana Space - Meja 100");
+    expect(html).toContain("Meja 100");
     expect(html).toContain("Hubungi Manager via WhatsApp");
     expect(html).toContain("rate(5)");
-    expect(html).toContain("/S-1?rate=");
+    expect(html).toContain("/S-100?rate=");
   });
 
-  it("normalizes leading zeroes from 'S-0001' and resolves to 'S-1'", async () => {
-    const req = new Request("https://grqrr.netlify.app/S-0001");
-    const res = await handler(req, { params: { id: "S-0001" } } as any);
+  it("normalizes leading zeroes from 'S-00100' and resolves to 'S-100'", async () => {
+    const req = new Request("https://grqrr.netlify.app/S-00100");
+    const res = await handler(req, { params: { id: "S-00100" } } as any);
 
     expect(res.status).toBe(200);
     const html = await res.text();
-    expect(html).toContain("Meja 01");
+    expect(html).toContain("Meja 100");
   });
 
   it("redirects active 'A-1' (Kasir Utama, direct mode) directly to Google Review", async () => {
@@ -81,22 +81,22 @@ describe("Google Review QR Redirect Function (Canonical S-[N] and A-[N])", () =>
     expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
   });
 
-  it("redirects to Google Review when 5-star rating chosen on 'S-1'", async () => {
-    const req = new Request("https://grqrr.netlify.app/S-1?rate=5", {
+  it("redirects to Google Review when 5-star rating chosen on 'S-100'", async () => {
+    const req = new Request("https://grqrr.netlify.app/S-100?rate=5", {
       headers: {
         "x-nf-client-connection-ip": "114.124.200.3",
         "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
       },
     });
 
-    const res = await handler(req, { params: { id: "S-1" } } as any);
+    const res = await handler(req, { params: { id: "S-100" } } as any);
 
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toContain("search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg");
 
     // Verify rating logged in Turso
     const latestScan = await db.execute({
-      sql: "SELECT rating_given, device_type FROM qr_scans WHERE link_id = 'S-1' AND rating_given = 5 LIMIT 1;",
+      sql: "SELECT rating_given, device_type FROM qr_scans WHERE link_id = 'S-100' AND rating_given = 5 LIMIT 1;",
       args: [],
     });
     expect(latestScan.rows.length).toBe(1);
@@ -104,14 +104,14 @@ describe("Google Review QR Redirect Function (Canonical S-[N] and A-[N])", () =>
     expect(latestScan.rows[0].device_type).toBe("ios");
   });
 
-  it("logs negative rating (rate=2) via background log ping on 'S-1'", async () => {
-    const req = new Request("https://grqrr.netlify.app/S-1?rate=2&log_only=1", {
+  it("logs negative rating (rate=2) via background log ping on 'S-100'", async () => {
+    const req = new Request("https://grqrr.netlify.app/S-100?rate=2&log_only=1", {
       headers: {
         "user-agent": "Mozilla/5.0 (Android 14; Mobile)",
       },
     });
 
-    const res = await handler(req, { params: { id: "S-1" } } as any);
+    const res = await handler(req, { params: { id: "S-100" } } as any);
 
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -120,12 +120,22 @@ describe("Google Review QR Redirect Function (Canonical S-[N] and A-[N])", () =>
 
     // Verify logged in Turso
     const latestNegative = await db.execute({
-      sql: "SELECT rating_given, device_type FROM qr_scans WHERE link_id = 'S-1' AND rating_given = 2 LIMIT 1;",
+      sql: "SELECT rating_given, device_type FROM qr_scans WHERE link_id = 'S-100' AND rating_given = 2 LIMIT 1;",
       args: [],
     });
     expect(latestNegative.rows.length).toBe(1);
     expect(Number(latestNegative.rows[0].rating_given)).toBe(2);
     expect(latestNegative.rows[0].device_type).toBe("android");
+  });
+
+  it("returns 404 custom error page for unassigned QR code 'S-1'", async () => {
+    const req = new Request("https://grqrr.netlify.app/S-1");
+    const res = await handler(req, { params: { id: "S-1" } } as unknown as Context);
+
+    expect(res.status).toBe(404);
+    const html = await res.text();
+    expect(html).toContain("QR Code Tidak Ditemukan");
+    expect(html).toContain("S-1");
   });
 
   it("returns 404 page for nonexistent ID", async () => {

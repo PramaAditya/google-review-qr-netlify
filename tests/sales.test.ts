@@ -172,18 +172,18 @@ describe("Sales PWA Backend APIs", () => {
     await db.execute("DELETE FROM merchants WHERE name = 'Test Loose Scanner Cafe';");
   });
   it("checks code status via GET /api/sales/check?id=...", async () => {
-    // Active code S-1
-    const reqActive = new Request("https://grqrr.netlify.app/api/sales/check?id=S-1");
-    const resActive = await salesHandler(reqActive, {} as any);
+    // Active code S-100
+    const reqActive = new Request("https://grqrr.netlify.app/api/sales/check?id=S-100");
+    const resActive = await salesHandler(reqActive, {} as unknown as Context);
     expect(resActive.status).toBe(200);
     const dataActive = await resActive.json();
     expect(dataActive.exists).toBe(true);
     expect(dataActive.is_active).toBe(true);
     expect(dataActive.merchant_name).toContain("Lalana");
 
-    // Fresh nonexistent code
-    const reqFresh = new Request("https://grqrr.netlify.app/api/sales/check?id=S-9999");
-    const resFresh = await salesHandler(reqFresh, {} as any);
+    // Fresh unassigned code S-1 (now emptied and free to assign)
+    const reqFresh = new Request("https://grqrr.netlify.app/api/sales/check?id=S-1");
+    const resFresh = await salesHandler(reqFresh, {} as unknown as Context);
     expect(resFresh.status).toBe(200);
     const dataFresh = await resFresh.json();
     expect(dataFresh.exists).toBe(false);
@@ -200,7 +200,7 @@ describe("Sales PWA Backend APIs", () => {
         merchant_name: "Test Hacker Cafe",
         maps_url: "https://search.google.com/local/writereview?placeid=ChIJLfa-odLpaC4ROAxQUcIh5Cg",
         mode: "direct",
-        items: ["S-1"], // S-1 is already active in Lalana Space!
+        items: ["S-100"], // S-100 is active in Lalana Space!
       }),
     });
 
@@ -208,7 +208,7 @@ describe("Sales PWA Backend APIs", () => {
     expect(res.status).toBe(409); // Conflict!
     const data = await res.json();
     expect(data.error).toContain("tidak dapat ditimpa");
-    expect(data.conflicts).toContain("S-1");
+    expect(data.conflicts).toContain("S-100");
   });
   it("resolves Google Maps URL to Place ID and direct review URL", async () => {
     const fullUrl = "https://www.google.com/maps/place/Lalana+Space/@-6.9905221,107.6614287,17z/data=!3m1!4b1!4m6!3m5!1s0x2e68e9d2a1bef62d:0x28e421c251500c38!8m2!3d-6.9905221!4d107.6640036!16s%2Fg%2F11y1zl89vx?entry=ttu";
