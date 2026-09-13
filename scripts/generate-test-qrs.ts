@@ -25,11 +25,11 @@ const testCases: QrTestCase[] = [
     expected: "Terdeteksi sebagai: Stiker S-1 (vinyl_table)",
   },
   {
-    filename: "valid-S-2.png",
+    filename: "valid-S-100.png",
     type: "valid_table",
-    label: "Stiker Meja S-2 (Standard URL)",
-    payload: "https://grqrr.netlify.app/S-2",
-    expected: "Terdeteksi sebagai: Stiker S-2 (vinyl_table)",
+    label: "Stiker Meja S-100 (Standard URL)",
+    payload: "https://grqrr.netlify.app/S-100",
+    expected: "Terdeteksi sebagai: Stiker S-100 (vinyl_table)",
   },
   {
     filename: "valid-S-42.png",

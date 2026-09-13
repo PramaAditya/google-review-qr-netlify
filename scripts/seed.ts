@@ -108,7 +108,7 @@ async function seed() {
 
   // 3. Seed QR Links
   console.log("Purging legacy demo records from Turso...");
-  await db.execute("DELETE FROM qr_links WHERE id NOT IN ('S-1', 'S-2', 'A-1');");
+  await db.execute("DELETE FROM qr_links WHERE id NOT IN ('S-1', 'S-100', 'A-1');");
   await db.execute("DELETE FROM qr_scans;");
   await db.execute("DELETE FROM feedback_logs;");
   await db.execute("DELETE FROM sqlite_sequence WHERE name IN ('qr_scans', 'feedback_logs');");
@@ -130,17 +130,17 @@ async function seed() {
       status: "active",
     },
     {
-      id: "S-2",
+      id: "S-100",
       merchant_id: "merch_lalana_space",
       sales_rep_id: budiPhone,
       batch_no: "BATCH-2026-09",
-      merchant_name: "Lalana Space - Meja 2",
-      table_no: "Meja 02",
+      merchant_name: "Lalana Space - Meja 100",
+      table_no: "Meja 100",
       zone: "outdoor",
       sticker_type: "vinyl_table",
       mode: "inherit",
       target_url: lalanaReviewUrl,
-      negative_feedback_url: "https://wa.me/6281234567890?text=Halo+Manager+Lalana+Space+Saya+ada+masukan+mengenai+Meja+02",
+      negative_feedback_url: "https://wa.me/6281234567890?text=Halo+Manager+Lalana+Space+Saya+ada+masukan+mengenai+Meja+100",
       status: "active",
     },
     {
