@@ -774,7 +774,7 @@
         <div class="form-group">
           <label for="act-maps">Link Google Maps Toko *</label>
           <div class="input-with-action">
-            <input type="url" id="act-maps" placeholder="https://maps.app.goo.gl/... atau link Maps" required oninput="onMapsInputChanged()">
+            <input type="url" id="act-maps" placeholder="https://maps.app.goo.gl/... atau link Maps" required oninput="onMapsInputChanged()" onchange="onMapsInputChanged()" onpaste="setTimeout(onMapsInputChanged, 40)" onkeyup="onMapsInputChanged()">
             <button type="button" id="btn-verify-maps" class="btn-verify-icon" onclick="verifyMapsUrl()" title="Verifikasi Link Google Maps & Ambil Nama Toko" disabled>
               <span id="verify-icon-inner">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1126,11 +1126,14 @@
 
   function onMapsInputChanged() {
     resolvedDirectReviewUrl = null;
+    var input = document.getElementById('act-maps');
     var badge = document.getElementById('maps-verify-badge');
     var btn = document.getElementById('btn-verify-maps');
     var iconInner = document.getElementById('verify-icon-inner');
     if (badge) badge.classList.add('hidden');
-    var hasValue = input && input.value && input.value.trim().length > 0;
+
+    var val = input && input.value ? input.value.trim() : '';
+    var hasValue = val.length > 0;
     if (btn) {
       btn.classList.remove('verified', 'loading');
       btn.style.background = hasValue ? '#fef08a' : '';
